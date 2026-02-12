@@ -4,7 +4,7 @@ import { apiResponse } from "../utils/apiResponse.js";
 import { User } from "../models/user.model.js";
 import { BannedEmail } from "../models/bannedEmail.model.js";
 import { OTP } from "../models/otp.model.js";
-import { sendOTPEmail } from "../utils/sendEmail.js";
+import { sendOTPEmail } from "../utils/sendEmailResend.js"; // Changed to Resend
 import { validateCity } from "../constants.js";
 import jwt from "jsonwebtoken";
 
