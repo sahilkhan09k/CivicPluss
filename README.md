@@ -305,23 +305,72 @@ Levels: High, Medium, Low
 
 ## 🌐 Deployment
 
-### Frontend (Vercel)
-```bash
-cd client
-npm run build
-# Deploy dist/ folder to Vercel
+### Production URLs
+- **Frontend**: https://civic-pluss.vercel.app
+- **Backend**: https://civicpluss.onrender.com
+
+### Backend Deployment (Render)
+
+1. **Create New Web Service** on Render
+2. **Connect GitHub Repository**: `https://github.com/sahilkhan09k/CivicPluss`
+3. **Configure Settings**:
+   - **Root Directory**: `server`
+   - **Build Command**: `npm install`
+   - **Start Command**: `npm start`
+   - **Environment**: `Node`
+
+4. **Add Environment Variables**:
+```env
+PORT=5000
+MONGODB_URI=your_mongodb_connection_string
+CORS_ORIGIN=https://civic-pluss.vercel.app
+CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+ACCESS_TOKEN_SECRET=your_access_token_secret
+REFRESH_TOKEN_SECRET=your_refresh_token_secret
+ACCESS_TOKEN_EXPIRES_IN=45m
+REFRESH_TOKEN_EXPIRES_IN=7d
+GROQ_API_KEY=your_groq_api_key
+EMAIL_USER=your_gmail_address
+EMAIL_PASSWORD=your_gmail_app_password
+NODE_ENV=production
 ```
 
-### Backend (Any Node.js host)
-```bash
-cd server
-npm start
+5. **Deploy** - Render will automatically build and deploy
+
+### Frontend Deployment (Vercel)
+
+1. **Import Project** from GitHub on Vercel
+2. **Configure Settings**:
+   - **Root Directory**: `client`
+   - **Framework Preset**: `Vite`
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `dist`
+
+3. **Add Environment Variables**:
+```env
+VITE_API_URL=https://civicpluss.onrender.com/api/v1
+VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
 ```
 
-Update environment variables:
-- Set `NODE_ENV=production`
-- Update `VITE_API_URL` to production URL
-- Configure CORS for production domain
+4. **Deploy** - Vercel will automatically build and deploy
+
+### Post-Deployment Steps
+
+1. **Update CORS**: Ensure backend `CORS_ORIGIN` includes your Vercel URL
+2. **Test Authentication**: Verify cookies work across domains
+3. **Create Admin Accounts**: Use the admin creation scripts on your production database
+4. **Test Email**: Register a new user to verify OTP emails are sent
+5. **Test Maps**: Verify Google Maps loads correctly with your API key
+
+### Important Notes
+
+- **Cookies**: The app uses `sameSite: "none"` and `secure: true` in production for cross-domain cookies
+- **CORS**: Backend allows requests from Vercel frontend URL
+- **Environment**: `NODE_ENV=production` must be set on Render
+- **MongoDB**: Use MongoDB Atlas for production database
+- **Email**: Gmail App Password required for OTP emails
 
 ## 📝 Environment Variables
 
