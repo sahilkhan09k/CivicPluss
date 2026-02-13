@@ -1,10 +1,22 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resend = null;
+
+const getResendClient = () => {
+    if (!resend) {
+        if (!process.env.RESEND_API_KEY) {
+            throw new Error('RESEND_API_KEY is not configured in environment variables');
+        }
+        resend = new Resend(process.env.RESEND_API_KEY);
+    }
+    return resend;
+};
 
 export const sendOTPEmail = async (email, otp) => {
     try {
-        const { data, error } = await resend.emails.send({
+        const resendClient = getResendClient();
+        
+        const { data, error } = await resendClient.emails.send({
             from: 'CivicPulse <onboarding@resend.dev>', // Use your verified domain or resend.dev for testing
             to: [email],
             subject: 'CivicPulse - Email Verification OTP',
