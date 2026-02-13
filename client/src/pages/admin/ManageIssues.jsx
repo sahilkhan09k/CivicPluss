@@ -13,6 +13,9 @@ const ManageIssues = () => {
     const [newStatus, setNewStatus] = useState('');
     const [updating, setUpdating] = useState(false);
     const [reportingFake, setReportingFake] = useState(false);
+    const [resolutionImage, setResolutionImage] = useState(null);
+    const [resolutionImagePreview, setResolutionImagePreview] = useState(null);
+    const [resolutionConfirmed, setResolutionConfirmed] = useState(false);
 
     useEffect(() => {
         fetchIssues();
@@ -33,15 +36,47 @@ const ManageIssues = () => {
     const handleUpdateIssue = (issue) => {
         setSelectedIssue(issue);
         setNewStatus(issue.status);
+        setResolutionImage(null);
+        setResolutionImagePreview(null);
+        setResolutionConfirmed(false);
         setShowModal(true);
+    };
+
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setResolutionImage(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setResolutionImagePreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
     const handleSaveUpdate = async () => {
         if (!selectedIssue || !newStatus) return;
 
+        // Validate resolution requirements
+        if (newStatus === 'Resolved') {
+            if (!resolutionImage) {
+                alert('Please upload a photo of the resolved issue');
+                return;
+            }
+            if (!resolutionConfirmed) {
+                alert('Please confirm that the issue is completely resolved');
+                return;
+            }
+        }
+
         try {
             setUpdating(true);
-            await apiService.updateIssueStatus(selectedIssue._id, newStatus);
+            await apiService.updateIssueStatus(
+                selectedIssue._id, 
+                newStatus, 
+                resolutionImage, 
+                resolutionConfirmed
+            );
 
             setIssues(issues.map(issue =>
                 issue._id === selectedIssue._id
@@ -51,6 +86,9 @@ const ManageIssues = () => {
 
             setShowModal(false);
             setSelectedIssue(null);
+            setResolutionImage(null);
+            setResolutionImagePreview(null);
+            setResolutionConfirmed(false);
         } catch (err) {
             alert(err.message || 'Failed to update issue');
         } finally {
@@ -268,6 +306,82 @@ const ManageIssues = () => {
                                         <option value="Resolved">Resolved</option>
                                     </select>
                                 </div>
+
+                                {/* Resolution Photo Upload - Required for Resolved status */}
+                                {newStatus === 'Resolved' && (
+                                    <>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                Resolution Photo <span className="text-red-500">*</span>
+                                            </label>
+                                            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-primary-400 transition-colors">
+                                                <div className="space-y-1 text-center">
+                                                    {resolutionImagePreview ? (
+                                                        <div className="relative">
+                                                            <img
+                                                                src={resolutionImagePreview}
+                                                                alt="Resolution preview"
+                                                                className="mx-auto h-48 w-auto rounded-lg"
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setResolutionImage(null);
+                                                                    setResolutionImagePreview(null);
+                                                                }}
+                                                                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                                                            >
+                                                                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                                </svg>
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <>
+                                                            <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                                                            <div className="flex text-sm text-gray-600">
+                                                                <label className="relative cursor-pointer bg-white rounded-md font-medium text-primary-600 hover:text-primary-500">
+                                                                    <span>Upload a photo</span>
+                                                                    <input
+                                                                        type="file"
+                                                                        className="sr-only"
+                                                                        accept="image/*"
+                                                                        onChange={handleImageChange}
+                                                                    />
+                                                                </label>
+                                                                <p className="pl-1">or drag and drop</p>
+                                                            </div>
+                                                            <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <p className="mt-2 text-sm text-gray-500">
+                                                Upload a clear photo showing the issue has been completely resolved
+                                            </p>
+                                        </div>
+
+                                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                                            <div className="flex items-start">
+                                                <input
+                                                    type="checkbox"
+                                                    id="resolutionConfirm"
+                                                    checked={resolutionConfirmed}
+                                                    onChange={(e) => setResolutionConfirmed(e.target.checked)}
+                                                    className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                                                />
+                                                <label htmlFor="resolutionConfirm" className="ml-3 text-sm">
+                                                    <span className="font-semibold text-gray-900">
+                                                        I confirm that this issue has been completely resolved.
+                                                    </span>
+                                                    <p className="text-gray-700 mt-1">
+                                                        I understand that if the issue is not fully resolved, strict action will be taken against me, including potential suspension of my admin privileges.
+                                                    </p>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">Current Priority</label>

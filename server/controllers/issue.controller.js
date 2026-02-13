@@ -273,10 +273,21 @@ export const getIssueById = asyncHandler(async (req, res) => {
 
 export const updateIssueStatus = asyncHandler(async (req, res) => {
     const { issueId } = req.params;
-    const { status } = req.body;
+    const { status, resolutionConfirmed } = req.body;
 
     if (!["Pending", "In Progress", "Resolved"].includes(status)) {
         throw new apiError(400, "Invalid status value");
+    }
+
+    // If marking as Resolved, require resolution image and confirmation
+    if (status === "Resolved") {
+        if (!req.file) {
+            throw new apiError(400, "Resolution photo is required when marking issue as resolved");
+        }
+        
+        if (!resolutionConfirmed || resolutionConfirmed !== "true") {
+            throw new apiError(400, "You must confirm that the issue is completely resolved");
+        }
     }
 
     // Verify issue belongs to admin's city (unless super admin)
@@ -289,6 +300,21 @@ export const updateIssueStatus = asyncHandler(async (req, res) => {
 
     if (!issue) {
         throw new apiError(404, "Issue not found or not in your city");
+    }
+
+    // Upload resolution image if provided
+    if (req.file && status === "Resolved") {
+        const resolutionImagePath = req.file.path;
+        const resolutionImage = await uploadOnCloudinary(resolutionImagePath);
+        
+        if (!resolutionImage) {
+            throw new apiError(500, "Failed to upload resolution image");
+        }
+        
+        issue.resolutionImageUrl = resolutionImage.url;
+        issue.resolvedBy = req.user._id;
+        issue.resolvedAt = new Date();
+        issue.resolutionConfirmed = true;
     }
 
     issue.status = status;

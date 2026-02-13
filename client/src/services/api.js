@@ -73,12 +73,12 @@ class ApiService {
         }
     }
 
-    async uploadRequest(endpoint, formData) {
+    async uploadRequest(endpoint, formData, method = 'POST') {
         const url = `${this.baseURL}${endpoint}`;
 
         try {
             const response = await fetch(url, {
-                method: 'POST',
+                method: method,
                 body: formData,
                 credentials: 'include', // Send cookies automatically
             });
@@ -99,7 +99,7 @@ class ApiService {
                         
                         // Retry upload (cookies updated automatically)
                         const retryResponse = await fetch(url, {
-                            method: 'POST',
+                            method: method,
                             body: formData,
                             credentials: 'include',
                         });
@@ -186,7 +186,16 @@ class ApiService {
         return this.request(`/issue/getIssue/${issueId}`);
     }
 
-    async updateIssueStatus(issueId, status) {
+    async updateIssueStatus(issueId, status, resolutionImage = null, resolutionConfirmed = false) {
+        if (status === 'Resolved' && resolutionImage) {
+            const formData = new FormData();
+            formData.append('status', status);
+            formData.append('resolutionImage', resolutionImage);
+            formData.append('resolutionConfirmed', resolutionConfirmed ? 'true' : 'false');
+            
+            return this.uploadRequest(`/issue/updateStatus/${issueId}`, formData, 'PUT');
+        }
+        
         return this.request(`/issue/updateStatus/${issueId}`, {
             method: 'PUT',
             body: JSON.stringify({ status }),

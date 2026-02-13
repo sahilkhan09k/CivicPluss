@@ -75,6 +75,23 @@ const issueSchema = new Schema({
     reportedAsFakeAt: {
         type: Date,
         default: null
+    },
+    resolutionImageUrl: {
+        type: String,
+        default: null
+    },
+    resolvedBy: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        default: null
+    },
+    resolvedAt: {
+        type: Date,
+        default: null
+    },
+    resolutionConfirmed: {
+        type: Boolean,
+        default: false
     }
 }, { timestamps: true });
 

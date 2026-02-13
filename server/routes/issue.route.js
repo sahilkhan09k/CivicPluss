@@ -23,7 +23,7 @@ router.get("/homeStats", optionalVerifyJWT, getHomeStats);
 
 router.get("/getIssue/:issueId", verifyJWT, getIssueById);
 
-router.put("/updateStatus/:issueId", verifyJWT, requireAdmin, updateIssueStatus);
+router.put("/updateStatus/:issueId", verifyJWT, requireAdmin, upload.single("resolutionImage"), updateIssueStatus);
 
 router.get("/adminStats", verifyJWT, requireAdmin, getAdminIssueStats);
 
