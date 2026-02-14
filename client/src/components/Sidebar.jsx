@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, FileText, MapPin, User, BarChart3, MessageSquare, LogOut, AlertCircle, Users } from 'lucide-react';
+import { Home, FileText, MapPin, User, BarChart3, MessageSquare, LogOut, AlertCircle, Users, CheckCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Sidebar = ({ isAdmin = false }) => {
@@ -18,6 +18,7 @@ const Sidebar = ({ isAdmin = false }) => {
         { to: '/admin', icon: Home, label: 'Dashboard' },
         { to: '/admin/issues', icon: AlertCircle, label: 'Issue Intelligence' },
         { to: '/admin/manage', icon: FileText, label: 'Manage Issues' },
+        { to: '/admin/resolved', icon: CheckCircle, label: 'Resolved Issues' },
         { to: '/admin/analytics', icon: BarChart3, label: 'Analytics' },
         { to: '/admin/feedback', icon: MessageSquare, label: 'Feedback & Trust' },
     ];

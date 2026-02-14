@@ -18,6 +18,7 @@ import Profile from './pages/user/Profile';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import IssueIntelligence from './pages/admin/IssueIntelligence';
 import ManageIssues from './pages/admin/ManageIssues';
+import ResolvedIssues from './pages/admin/ResolvedIssues';
 import Analytics from './pages/admin/Analytics';
 import FeedbackMetrics from './pages/admin/FeedbackMetrics';
 
@@ -166,6 +167,14 @@ function App() {
             element={
               <ProtectedRoute adminOnly={true}>
                 <ManageIssues />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/resolved"
+            element={
+              <ProtectedRoute adminOnly={true}>
+                <ResolvedIssues />
               </ProtectedRoute>
             }
           />

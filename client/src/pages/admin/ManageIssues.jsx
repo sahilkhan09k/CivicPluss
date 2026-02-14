@@ -285,8 +285,8 @@ const ManageIssues = () => {
 
                 {/* Update Modal */}
                 {showModal && selectedIssue && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                        <div className="bg-white rounded-lg p-8 max-w-2xl w-full mx-4">
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-lg p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                             <h2 className="text-2xl font-bold mb-6">Update Issue #{selectedIssue._id.slice(-6)}</h2>
 
                             <div className="space-y-4">
@@ -322,7 +322,7 @@ const ManageIssues = () => {
                                                             <img
                                                                 src={resolutionImagePreview}
                                                                 alt="Resolution preview"
-                                                                className="mx-auto h-48 w-auto rounded-lg"
+                                                                className="mx-auto h-32 w-auto rounded-lg object-cover"
                                                             />
                                                             <button
                                                                 type="button"
@@ -330,16 +330,16 @@ const ManageIssues = () => {
                                                                     setResolutionImage(null);
                                                                     setResolutionImagePreview(null);
                                                                 }}
-                                                                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                                                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
                                                             >
-                                                                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                                                 </svg>
                                                             </button>
                                                         </div>
                                                     ) : (
                                                         <>
-                                                            <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                                                            <Upload className="mx-auto h-10 w-10 text-gray-400" />
                                                             <div className="flex text-sm text-gray-600">
                                                                 <label className="relative cursor-pointer bg-white rounded-md font-medium text-primary-600 hover:text-primary-500">
                                                                     <span>Upload a photo</span>
