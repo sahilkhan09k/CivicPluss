@@ -184,12 +184,12 @@ const ManageIssues = () => {
                 {/* Search */}
                 <div className="card mb-6">
                     <div className="relative flex items-center">
-                        <Search className="absolute left-3 h-5 w-5 text-gray-400 pointer-events-none" />
+                        <Search className="absolute left-4 h-5 w-5 text-gray-400 pointer-events-none" />
                         <input
                             type="text"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="input-field pl-10 w-full"
+                            className="input-field pl-12 w-full"
                             placeholder="Search issues by title or description..."
                         />
                     </div>
