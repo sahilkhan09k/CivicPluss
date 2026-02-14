@@ -11,6 +11,7 @@
     "create-admin": "node createAdmin.js",
     "add-admin": "node addCustomAdmin.js",
     "create-city-admin": "node createCityAdmin.js",
+    "create-all-city-admins": "node createAllCityAdmins.js",
     "check-user-city": "node checkUserCity.js",
     "list-users": "node listAllUsers.js",
     "update-admin-verification": "node updateAdminVerification.js"
