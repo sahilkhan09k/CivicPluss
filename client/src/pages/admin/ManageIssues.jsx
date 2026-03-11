@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Edit, CheckCircle, Upload, Loader2, AlertTriangle, Shield } from 'lucide-react';
+import { Search, Edit, CheckCircle, Upload, Loader2, AlertTriangle } from 'lucide-react';
 import Sidebar from '../../components/Sidebar';
 import { apiService } from '../../services/api';
 
@@ -25,8 +25,7 @@ const ManageIssues = () => {
         try {
             setLoading(true);
             const response = await apiService.getAllIssues();
-            const nonResolvedIssues = response.data.filter(issue => issue.status !== 'Resolved');
-            setIssues(nonResolvedIssues);
+            setIssues(response.data);
         } catch (err) {
             setError(err.message || 'Failed to fetch issues');
         } finally {
@@ -183,8 +182,8 @@ const ManageIssues = () => {
 
                 {/* Search */}
                 <div className="card mb-6">
-                    <div className="relative flex items-center">
-                        <Search className="absolute left-4 h-5 w-5 text-gray-400 pointer-events-none" />
+                    <div className="relative">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
                         <input
                             type="text"
                             value={searchTerm}

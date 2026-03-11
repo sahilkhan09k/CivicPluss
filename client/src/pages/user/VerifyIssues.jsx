@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { ThumbsUp, Camera, MapPin, Loader2 } from 'lucide-react';
 import Sidebar from '../../components/Sidebar';
 import { apiService } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 const VerifyIssues = () => {
+    const { user } = useAuth();
     const [issues, setIssues] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -18,7 +20,8 @@ const VerifyIssues = () => {
             const response = await apiService.getAllIssues();
 
             const unverifiedIssues = response.data.filter(
-                issue => issue.status !== 'Resolved'
+                issue => issue.status !== 'Resolved' && 
+                         issue.reportedBy?._id !== user?._id
             );
             setIssues(unverifiedIssues);
         } catch (err) {

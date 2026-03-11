@@ -329,10 +329,7 @@ export const updateIssueStatus = asyncHandler(async (req, res) => {
 export const getIssuesByPriority = asyncHandler(async (req, res) => {
     const cityFilter = getCityFilter(req.user);
     
-    const issues = await Issue.find({
-        ...cityFilter,
-        status: { $ne: "Resolved" }
-    })
+    const issues = await Issue.find(cityFilter)
         .populate("reportedBy", "name email")
         .sort({ priorityScore: -1, createdAt: -1 });
 
