@@ -312,13 +312,35 @@ export const updateIssueStatus = asyncHandler(async (req, res) => {
         }
         
         issue.resolutionImageUrl = resolutionImage.url;
-        issue.resolvedBy = req.user._id;
-        issue.resolvedAt = new Date();
         issue.resolutionConfirmed = true;
     }
 
+    // Set admin decision fields for resolved status
+    if (status === "Resolved") {
+        issue.resolvedBy = req.user._id;
+        issue.resolvedAt = new Date();
+        // Set admin decision timestamp for challenge system
+        issue.adminDecisionTimestamp = new Date();
+    }
+
+    const oldStatus = issue.status;
     issue.status = status;
     await issue.save();
+
+    // Send notification to user about status change
+    if (oldStatus !== status) {
+        try {
+            const { notificationService } = await import('../services/notificationService.js');
+            await notificationService.notifyIssueStatusChanged({
+                issue,
+                oldStatus,
+                newStatus: status,
+                updatedBy: req.user._id
+            });
+        } catch (notificationError) {
+            console.error('Error sending status change notification:', notificationError);
+        }
+    }
 
     return res
         .status(200)
@@ -344,26 +366,139 @@ export const getIssuesByPriority = asyncHandler(async (req, res) => {
 export const getAdminIssueStats = asyncHandler(async (req, res) => {
     const cityFilter = getCityFilter(req.user);
     
-    const stats = await Issue.aggregate([
-        { $match: cityFilter },
-        {
-            $group: {
-                _id: "$status",
-                count: { $sum: 1 }
+    // Get all issues for the admin's city
+    const allIssues = await Issue.find(cityFilter).populate('reportedBy', 'name email');
+    
+    // Basic counts
+    const totalIssues = allIssues.length;
+    const resolvedIssues = allIssues.filter(issue => issue.status === 'Resolved');
+    const pendingIssues = allIssues.filter(issue => issue.status === 'Pending');
+    const inProgressIssues = allIssues.filter(issue => issue.status === 'In Progress');
+    const criticalUnresolved = allIssues.filter(issue => 
+        issue.priority === 'High' && issue.status !== 'Resolved'
+    );
+    
+    // Resolution efficiency
+    const resolutionEfficiency = totalIssues > 0 
+        ? Math.round((resolvedIssues.length / totalIssues) * 100) 
+        : 0;
+    
+    // Calculate average resolution time
+    let avgResolutionTime = '0 days';
+    if (resolvedIssues.length > 0) {
+        const totalResolutionTime = resolvedIssues.reduce((total, issue) => {
+            if (issue.resolvedAt && issue.createdAt) {
+                const resolutionTime = new Date(issue.resolvedAt) - new Date(issue.createdAt);
+                return total + resolutionTime;
             }
+            return total;
+        }, 0);
+        
+        const avgTimeMs = totalResolutionTime / resolvedIssues.length;
+        const avgTimeDays = Math.round(avgTimeMs / (1000 * 60 * 60 * 24) * 10) / 10; // Round to 1 decimal
+        avgResolutionTime = `${avgTimeDays} days`;
+    }
+    
+    // Weekly trend data (last 7 days)
+    const weeklyData = [];
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const today = new Date();
+    
+    for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i);
+        const dayStart = new Date(date.setHours(0, 0, 0, 0));
+        const dayEnd = new Date(date.setHours(23, 59, 59, 999));
+        
+        const reported = allIssues.filter(issue => {
+            const createdAt = new Date(issue.createdAt);
+            return createdAt >= dayStart && createdAt <= dayEnd;
+        }).length;
+        
+        const resolved = allIssues.filter(issue => {
+            if (!issue.resolvedAt) return false;
+            const resolvedAt = new Date(issue.resolvedAt);
+            return resolvedAt >= dayStart && resolvedAt <= dayEnd;
+        }).length;
+        
+        weeklyData.push({
+            day: days[date.getDay() === 0 ? 6 : date.getDay() - 1], // Convert Sunday=0 to Sunday=6
+            reported,
+            resolved
+        });
+    }
+    
+    // Top problem zones (group by approximate location)
+    const zones = {};
+    allIssues.forEach(issue => {
+        if (!issue.location) return;
+        
+        // Group by 0.01 degree precision (roughly 1km)
+        const zoneLat = Math.round(issue.location.lat * 100) / 100;
+        const zoneLng = Math.round(issue.location.lng * 100) / 100;
+        const zoneKey = `${zoneLat},${zoneLng}`;
+        
+        if (!zones[zoneKey]) {
+            zones[zoneKey] = {
+                count: 0,
+                highPriority: 0,
+                lat: zoneLat,
+                lng: zoneLng
+            };
         }
-    ]);
+        
+        zones[zoneKey].count += 1;
+        if (issue.priority === 'High') {
+            zones[zoneKey].highPriority += 1;
+        }
+    });
+    
+    const topProblemZones = Object.entries(zones)
+        .map(([key, data], index) => ({
+            zone: `Zone ${index + 1}`,
+            issues: data.count,
+            priority: data.highPriority > 2 ? 'high' : 
+                     data.highPriority > 0 ? 'medium' : 'low',
+            location: `${data.lat}, ${data.lng}`,
+            lat: data.lat,
+            lng: data.lng
+        }))
+        .sort((a, b) => b.issues - a.issues)
+        .slice(0, 5);
+    
+    // Category distribution
+    const categoryStats = {};
+    allIssues.forEach(issue => {
+        const category = issue.category || 'Other';
+        categoryStats[category] = (categoryStats[category] || 0) + 1;
+    });
+    
+    const stats = {
+        totalIssues,
+        criticalUnresolved: criticalUnresolved.length,
+        avgResolutionTime,
+        resolutionEfficiency,
+        statusBreakdown: {
+            pending: pendingIssues.length,
+            inProgress: inProgressIssues.length,
+            resolved: resolvedIssues.length
+        },
+        weeklyData,
+        topProblemZones,
+        categoryStats,
+        issuesWithLocation: allIssues.filter(issue => issue.location?.lat && issue.location?.lng)
+    };
 
     return res
         .status(200)
-        .json(new apiResponse(200, stats, "Admin stats fetched"));
+        .json(new apiResponse(200, stats, "Admin stats fetched successfully"));
 });
 
 
 export const reportIssueAsFake = asyncHandler(async (req, res) => {
     const { issueId } = req.params;
 
-    if (req.user.role !== 'admin') {
+    if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
         throw new apiError(403, "Only admins can report issues as fake");
     }
 
@@ -390,7 +525,22 @@ export const reportIssueAsFake = asyncHandler(async (req, res) => {
     issue.reportedAsFake = true;
     issue.reportedAsFakeBy = req.user._id;
     issue.reportedAsFakeAt = new Date();
+    // Set admin decision timestamp for challenge system
+    issue.adminDecisionTimestamp = new Date();
+    // Schedule trust score penalty for 24 hours later (to allow challenge)
+    issue.trustScorePenaltyScheduledFor = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
     await issue.save();
+
+    // Send notification to user about spam report
+    try {
+        const { notificationService } = await import('../services/notificationService.js');
+        await notificationService.notifyIssueReportedSpam({
+            issue,
+            reportedBy: req.user
+        });
+    } catch (notificationError) {
+        console.error('Error sending spam notification:', notificationError);
+    }
 
     const reportingUser = issue.reportedBy;
 
@@ -398,45 +548,9 @@ export const reportIssueAsFake = asyncHandler(async (req, res) => {
         throw new apiError(404, "User who reported this issue not found");
     }
 
-    reportingUser.trustScore = Math.max(0, reportingUser.trustScore - 25);
-
-    let userDeleted = false;
-    let emailBanned = false;
-
-    if (reportingUser.trustScore === 0) {
-        try {
-            await BannedEmail.create({
-                email: reportingUser.email,
-                userId: reportingUser._id,
-                userName: reportingUser.name,
-                reason: 'Multiple fake reports (Trust score reached 0)',
-                bannedBy: req.user._id,
-                bannedAt: new Date()
-            });
-            emailBanned = true;
-        } catch (err) {
-            console.error('Error adding to banned list:', err);
-        }
-
-        await User.findByIdAndDelete(reportingUser._id);
-        userDeleted = true;
-
-        return res
-            .status(200)
-            .json(new apiResponse(200, {
-                issue,
-                user: {
-                    _id: reportingUser._id,
-                    name: reportingUser.name,
-                    email: reportingUser.email,
-                    trustScore: 0,
-                    deleted: true,
-                    emailBanned: true
-                }
-            }, `Issue reported as fake. User's trust score reduced to 0. User has been permanently banned and deleted from the system. Email ${reportingUser.email} is now blacklisted.`));
-    }
-
-    await reportingUser.save();
+    // Don't apply trust score penalty immediately - it will be applied after 24 hours
+    // This gives the user time to challenge the admin's decision
+    console.log(`📅 Trust score penalty (-25) scheduled for ${issue.trustScorePenaltyScheduledFor}`);
 
     return res
         .status(200)
@@ -446,10 +560,10 @@ export const reportIssueAsFake = asyncHandler(async (req, res) => {
                 _id: reportingUser._id,
                 name: reportingUser.name,
                 email: reportingUser.email,
-                trustScore: reportingUser.trustScore,
+                trustScore: reportingUser.trustScore, // No immediate change
                 isBanned: false
             }
-        }, `Issue reported as fake. User's trust score reduced to ${reportingUser.trustScore}`));
+        }, `Issue reported as fake. Trust score penalty (-25) will be applied in 24 hours if not challenged.`));
 });
 
 

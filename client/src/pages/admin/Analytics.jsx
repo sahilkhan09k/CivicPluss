@@ -3,23 +3,30 @@ import Sidebar from '../../components/Sidebar';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { TrendingUp, Loader2 } from 'lucide-react';
 import { apiService } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 const Analytics = () => {
+    const { user } = useAuth();
     const [issues, setIssues] = useState([]);
+    const [adminStats, setAdminStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        fetchIssues();
+        fetchData();
     }, []);
 
-    const fetchIssues = async () => {
+    const fetchData = async () => {
         try {
             setLoading(true);
-            const response = await apiService.getAllIssues();
-            setIssues(response.data);
+            const [issuesResponse, statsResponse] = await Promise.all([
+                apiService.getAllIssues(),
+                apiService.getAdminStats()
+            ]);
+            setIssues(issuesResponse.data);
+            setAdminStats(statsResponse.data);
         } catch (err) {
-            setError(err.message || 'Failed to fetch issues');
+            setError(err.message || 'Failed to fetch analytics data');
         } finally {
             setLoading(false);
         }
@@ -34,19 +41,19 @@ const Analytics = () => {
     };
 
     const getAreaData = () => {
-        const areas = ['Downtown', 'North', 'East', 'West', 'South'];
-        return areas.map(area => ({
-            area,
-            issues: Math.floor(Math.random() * 30) + 10
+        if (!adminStats?.topProblemZones) return [];
+        return adminStats.topProblemZones.map(zone => ({
+            area: zone.zone,
+            issues: zone.issues
         }));
     };
 
     const getResolutionTrend = () => {
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-        return months.map(month => ({
-            month,
-            resolved: Math.floor(Math.random() * 20) + 40,
-            reported: Math.floor(Math.random() * 20) + 45
+        if (!adminStats?.weeklyData) return [];
+        return adminStats.weeklyData.map(day => ({
+            day: day.day,
+            reported: day.reported,
+            resolved: day.resolved
         }));
     };
 
@@ -89,8 +96,15 @@ const Analytics = () => {
 
             <div className="flex-1 ml-64 p-8">
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold mb-2">Analytics & Reports</h1>
-                    <p className="text-gray-600">Data-driven insights for better governance</p>
+                    <h1 className="text-3xl font-bold mb-2">
+                        {user?.role === 'super_admin' ? 'State Analytics & Reports' : 'Analytics & Reports'}
+                    </h1>
+                    <p className="text-gray-600">
+                        {user?.role === 'super_admin' 
+                            ? 'State-wide insights for governance oversight and quality monitoring'
+                            : 'Data-driven insights for better governance'
+                        }
+                    </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -114,9 +128,11 @@ const Analytics = () => {
 
                     <div className="card">
                         <p className="text-gray-600 text-sm mb-1">Avg Response Time</p>
-                        <p className="text-3xl font-bold text-orange-600 mb-2">3.2d</p>
+                        <p className="text-3xl font-bold text-orange-600 mb-2">
+                            {adminStats?.avgResolutionTime || '0 days'}
+                        </p>
                         <div className="flex items-center text-gray-600 text-sm">
-                            <span>Estimated average</span>
+                            <span>Dynamic average</span>
                         </div>
                     </div>
 
@@ -155,7 +171,7 @@ const Analytics = () => {
                     </div>
 
                     <div className="card">
-                        <h2 className="text-xl font-bold mb-4">Area-wise Issue Density</h2>
+                        <h2 className="text-xl font-bold mb-4">Top Problem Zones</h2>
                         <ResponsiveContainer width="100%" height={300}>
                             <BarChart data={areaData}>
                                 <CartesianGrid strokeDasharray="3 3" />
@@ -169,11 +185,11 @@ const Analytics = () => {
                 </div>
 
                 <div className="card">
-                    <h2 className="text-xl font-bold mb-4">Resolution Trend (6 Months)</h2>
+                    <h2 className="text-xl font-bold mb-4">Weekly Activity Trend</h2>
                     <ResponsiveContainer width="100%" height={350}>
                         <LineChart data={resolutionTrend}>
                             <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="month" />
+                            <XAxis dataKey="day" />
                             <YAxis />
                             <Tooltip />
                             <Legend />

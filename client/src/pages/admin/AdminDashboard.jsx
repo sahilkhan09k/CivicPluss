@@ -29,7 +29,10 @@ const AdminDashboard = () => {
         criticalUnresolved: 0,
         avgResolutionTime: '0 days',
         resolutionEfficiency: 0,
-        totalIssues: 0
+        totalIssues: 0,
+        weeklyData: [],
+        topProblemZones: [],
+        issuesWithLocation: []
     });
 
     // Get map center based on admin's city
@@ -50,26 +53,38 @@ const AdminDashboard = () => {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const response = await apiService.getAllIssues();
-            const allIssues = response.data;
+            
+            // Fetch comprehensive admin stats
+            const statsResponse = await apiService.getAdminStats();
+            const adminStats = statsResponse.data;
+            
+            // Also fetch all issues for the map (if not included in stats)
+            const issuesResponse = await apiService.getAllIssues();
+            const allIssues = issuesResponse.data;
+            
             setIssues(allIssues);
-
-            const criticalUnresolved = allIssues.filter(
-                i => i.priority === 'High' && i.status !== 'Resolved'
-            ).length;
-
-            const resolved = allIssues.filter(i => i.status === 'Resolved').length;
-            const efficiency = allIssues.length > 0
-                ? Math.round((resolved / allIssues.length) * 100)
-                : 0;
-
             setStats({
-                criticalUnresolved,
-                avgResolutionTime: '3.2 days',
-                resolutionEfficiency: efficiency,
-                totalIssues: allIssues.length
+                criticalUnresolved: adminStats.criticalUnresolved,
+                avgResolutionTime: adminStats.avgResolutionTime,
+                resolutionEfficiency: adminStats.resolutionEfficiency,
+                totalIssues: adminStats.totalIssues,
+                weeklyData: adminStats.weeklyData || [],
+                topProblemZones: adminStats.topProblemZones || [],
+                issuesWithLocation: adminStats.issuesWithLocation || allIssues.filter(i => i.location?.lat && i.location?.lng)
             });
+            
+            // Debug logging
+            console.log('Admin Dashboard Data:', {
+                totalIssues: adminStats.totalIssues,
+                criticalUnresolved: adminStats.criticalUnresolved,
+                avgResolutionTime: adminStats.avgResolutionTime,
+                resolutionEfficiency: adminStats.resolutionEfficiency,
+                weeklyDataPoints: adminStats.weeklyData?.length || 0,
+                problemZones: adminStats.topProblemZones?.length || 0
+            });
+            
         } catch (err) {
+            console.error('Error fetching admin data:', err);
             setError(err.message || 'Failed to fetch data');
         } finally {
             setLoading(false);
@@ -97,65 +112,33 @@ const AdminDashboard = () => {
     };
 
     const getTopProblemZones = () => {
-
-        const zones = {};
-        issues.forEach(issue => {
-            if (!issue.location) return;
-
-            const zoneLat = Math.round(issue.location.lat * 100) / 100;
-            const zoneLng = Math.round(issue.location.lng * 100) / 100;
-            const zoneKey = `${zoneLat},${zoneLng}`;
-
-            if (!zones[zoneKey]) {
-                zones[zoneKey] = {
-                    count: 0,
-                    highPriority: 0,
-                    lat: zoneLat,
-                    lng: zoneLng
-                };
-            }
-
-            zones[zoneKey].count += 1;
-            if (issue.priority === 'High') {
-                zones[zoneKey].highPriority += 1;
-            }
-        });
-
-        return Object.entries(zones)
-            .map(([key, data], index) => ({
-                zone: `Zone ${index + 1}`,
-                issues: data.count,
-                priority: data.highPriority > 2 ? 'high' :
-                    data.highPriority > 0 ? 'medium' : 'low',
-                location: `${data.lat}, ${data.lng}`
-            }))
-            .sort((a, b) => b.issues - a.issues)
-            .slice(0, 5);
+        // Use dynamic data from API
+        return stats.topProblemZones || [];
     };
 
     const getWeeklyData = () => {
-        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-        const today = new Date();
-        const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-
-        const reported = issues.filter(i => new Date(i.createdAt) >= weekAgo).length;
-        const resolved = issues.filter(i =>
-            i.status === 'Resolved' && new Date(i.updatedAt) >= weekAgo
-        ).length;
-
-        return days.map(day => ({
-            day,
-            reported: Math.floor(reported / 7) + Math.floor(Math.random() * 3),
-            resolved: Math.floor(resolved / 7) + Math.floor(Math.random() * 2)
-        }));
+        // Use dynamic data from API
+        return stats.weeklyData || [];
     };
 
     if (loading) {
         return (
-            <div className="flex min-h-screen bg-gray-50">
+            <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 relative overflow-hidden">
+                {/* Background Elements */}
+                <div className="absolute inset-0">
+                    <div className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-br from-primary-200/20 to-transparent rounded-full blur-3xl animate-float"></div>
+                    <div className="absolute bottom-20 right-20 w-80 h-80 bg-gradient-to-br from-accent-200/20 to-transparent rounded-full blur-3xl animate-float" style={{animationDelay: '3s'}}></div>
+                </div>
+
                 <Sidebar isAdmin={true} />
-                <div className="flex-1 ml-64 p-8 flex items-center justify-center">
-                    <Loader2 className="h-12 w-12 animate-spin text-primary-600" />
+                <div className="relative z-10 flex-1 ml-64 p-8 flex items-center justify-center">
+                    <div className="text-center">
+                        <div className="bg-gradient-to-br from-primary-500 to-accent-500 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl animate-pulse">
+                            <Loader2 className="h-10 w-10 text-white animate-spin" />
+                        </div>
+                        <h2 className="text-2xl font-bold mb-2 text-gray-900">Loading Dashboard</h2>
+                        <p className="text-gray-600 text-lg">Gathering analytics...</p>
+                    </div>
                 </div>
             </div>
         );
@@ -163,12 +146,29 @@ const AdminDashboard = () => {
 
     if (error) {
         return (
-            <div className="flex min-h-screen bg-gray-50">
+            <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 relative overflow-hidden">
+                {/* Background Elements */}
+                <div className="absolute inset-0">
+                    <div className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-br from-primary-200/20 to-transparent rounded-full blur-3xl animate-float"></div>
+                    <div className="absolute bottom-20 right-20 w-80 h-80 bg-gradient-to-br from-accent-200/20 to-transparent rounded-full blur-3xl animate-float" style={{animationDelay: '3s'}}></div>
+                </div>
+
                 <Sidebar isAdmin={true} />
-                <div className="flex-1 ml-64 p-8">
-                    <div className="card bg-red-50 border-2 border-red-200 text-center py-12">
-                        <p className="text-red-700 text-lg">{error}</p>
-                        <p className="text-sm text-red-600 mt-2">Please login to view dashboard</p>
+                <div className="relative z-10 flex-1 ml-64 p-8">
+                    <div className="max-w-2xl mx-auto">
+                        <div className="card-gradient text-center py-16 border-2 border-red-200 bg-gradient-to-br from-red-50 to-red-100/50">
+                            <div className="bg-gradient-to-br from-red-500 to-red-600 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
+                                <AlertCircle className="h-10 w-10 text-white" />
+                            </div>
+                            <h2 className="text-3xl font-bold text-red-700 mb-4">Dashboard Error</h2>
+                            <p className="text-red-700 text-lg mb-8">{error}</p>
+                            <button 
+                                onClick={fetchData}
+                                className="btn-primary"
+                            >
+                                Try Again
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -177,106 +177,150 @@ const AdminDashboard = () => {
 
     const topProblemZones = getTopProblemZones();
     const weeklyData = getWeeklyData();
-    const issuesWithLocation = issues.filter(i => i.location?.lat && i.location?.lng);
+    const issuesWithLocation = stats.issuesWithLocation || issues.filter(i => i.location?.lat && i.location?.lng);
 
     return (
-        <div className="flex min-h-screen bg-gray-50">
+        <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 relative overflow-hidden">
+            {/* Background Elements */}
+            <div className="absolute inset-0">
+                <div className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-br from-primary-200/20 to-transparent rounded-full blur-3xl animate-float"></div>
+                <div className="absolute bottom-20 right-20 w-80 h-80 bg-gradient-to-br from-accent-200/20 to-transparent rounded-full blur-3xl animate-float" style={{animationDelay: '3s'}}></div>
+            </div>
+
             <Sidebar isAdmin={true} />
 
-            <div className="flex-1 ml-64 p-8">
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold mb-2">
-                        {user?.city ? `${user.city} Admin Dashboard` : 'Admin Dashboard'}
-                    </h1>
-                    <p className="text-gray-600">
-                        {user?.city ? `${user.city} issue management and analytics` : 'City-wide issue management and analytics'}
-                    </p>
-                </div>
-
-                {/* Key Metrics */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <div className="card">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-gray-600 text-sm mb-1">Critical Unresolved</p>
-                                <p className="text-3xl font-bold text-red-600">{stats.criticalUnresolved}</p>
+            <div className="relative z-10 flex-1 ml-64 p-8">
+                <div className="max-w-7xl mx-auto">
+                    <div className="mb-12 animate-fade-in">
+                        <div className="flex items-center space-x-4 mb-6">
+                            <div className="bg-gradient-to-br from-primary-500 to-accent-500 p-4 rounded-2xl shadow-lg">
+                                <TrendingUp className="h-10 w-10 text-white" />
                             </div>
-                            <AlertCircle className="h-12 w-12 text-red-600 opacity-20" />
+                            <div>
+                                <h1 className="text-5xl font-black bg-gradient-to-r from-primary-600 via-primary-700 to-accent-600 bg-clip-text text-transparent tracking-tight">
+                                    {user?.city ? `${user.city} Admin Dashboard` : 'Admin Dashboard'}
+                                </h1>
+                                <p className="text-gray-600 text-xl font-medium">
+                                    {user?.city ? `${user.city} issue management and analytics` : 'City-wide issue management and analytics'}
+                                </p>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="card">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-gray-600 text-sm mb-1">Avg Resolution Time</p>
-                                <p className="text-3xl font-bold text-orange-600">{stats.avgResolutionTime}</p>
+                    {/* Key Metrics */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 animate-slide-up">
+                        <div className="stat-card group">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-gray-600 text-sm mb-2 font-medium">Critical Unresolved</p>
+                                    <p className="text-4xl font-black text-red-600 mb-1">{stats.criticalUnresolved}</p>
+                                    <div className="w-12 h-1 bg-gradient-to-r from-red-500 to-red-600 rounded-full"></div>
+                                </div>
+                                <div className="bg-gradient-to-br from-red-100 to-red-200 p-4 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                                    <AlertCircle className="h-8 w-8 text-red-600" />
+                                </div>
                             </div>
-                            <Clock className="h-12 w-12 text-orange-600 opacity-20" />
+                        </div>
+
+                        <div className="stat-card group">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-gray-600 text-sm mb-2 font-medium">Avg Resolution Time</p>
+                                    <p className="text-4xl font-black text-orange-600 mb-1">{stats.avgResolutionTime}</p>
+                                    <div className="w-12 h-1 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full"></div>
+                                </div>
+                                <div className="bg-gradient-to-br from-orange-100 to-orange-200 p-4 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                                    <Clock className="h-8 w-8 text-orange-600" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="stat-card group">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-gray-600 text-sm mb-2 font-medium">Resolution Efficiency</p>
+                                    <p className="text-4xl font-black text-green-600 mb-1">{stats.resolutionEfficiency}%</p>
+                                    <div className="w-12 h-1 bg-gradient-to-r from-green-500 to-green-600 rounded-full"></div>
+                                </div>
+                                <div className="bg-gradient-to-br from-green-100 to-green-200 p-4 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                                    <TrendingUp className="h-8 w-8 text-green-600" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="stat-card group">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-gray-600 text-sm mb-2 font-medium">Total Issues</p>
+                                    <p className="text-4xl font-black text-primary-600 mb-1">{stats.totalIssues}</p>
+                                    <div className="w-12 h-1 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full"></div>
+                                </div>
+                                <div className="bg-gradient-to-br from-primary-100 to-primary-200 p-4 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                                    <MapPin className="h-8 w-8 text-primary-600" />
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="card">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-gray-600 text-sm mb-1">Resolution Efficiency</p>
-                                <p className="text-3xl font-bold text-green-600">{stats.resolutionEfficiency}%</p>
-                            </div>
-                            <TrendingUp className="h-12 w-12 text-green-600 opacity-20" />
-                        </div>
-                    </div>
-
-                    <div className="card">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-gray-600 text-sm mb-1">Total Issues</p>
-                                <p className="text-3xl font-bold text-primary-600">{stats.totalIssues}</p>
-                            </div>
-                            <MapPin className="h-12 w-12 text-primary-600 opacity-20" />
-                        </div>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                     {/* Weekly Trend */}
                     <div className="card">
                         <h2 className="text-xl font-bold mb-4">Weekly Trend</h2>
-                        <ResponsiveContainer width="100%" height={250}>
-                            <BarChart data={weeklyData}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="day" />
-                                <YAxis />
-                                <Tooltip />
-                                <Bar dataKey="reported" fill="#3b82f6" name="Reported" />
-                                <Bar dataKey="resolved" fill="#10b981" name="Resolved" />
-                            </BarChart>
-                        </ResponsiveContainer>
+                        {weeklyData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height={250}>
+                                <BarChart data={weeklyData}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="day" />
+                                    <YAxis />
+                                    <Tooltip />
+                                    <Bar dataKey="reported" fill="#3b82f6" name="Reported" />
+                                    <Bar dataKey="resolved" fill="#10b981" name="Resolved" />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="h-64 flex items-center justify-center text-gray-500">
+                                <div className="text-center">
+                                    <TrendingUp className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                                    <p>No data available for the past week</p>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Top Problem Zones */}
                     <div className="card">
                         <h2 className="text-xl font-bold mb-4">Top 5 Problem Zones</h2>
-                        <div className="space-y-3">
-                            {topProblemZones.map((zone, index) => (
-                                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                    <div className="flex items-center space-x-3">
-                                        <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                                            {index + 1}
+                        {topProblemZones.length > 0 ? (
+                            <div className="space-y-3">
+                                {topProblemZones.map((zone, index) => (
+                                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                        <div className="flex items-center space-x-3">
+                                            <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                                {index + 1}
+                                            </div>
+                                            <div>
+                                                <p className="font-semibold">{zone.zone}</p>
+                                                <p className="text-xs text-gray-500">{zone.location}</p>
+                                                <p className="text-sm text-gray-600">{zone.issues} issues</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="font-semibold">{zone.zone}</p>
-                                            <p className="text-xs text-gray-500">{zone.location}</p>
-                                            <p className="text-sm text-gray-600">{zone.issues} issues</p>
-                                        </div>
+                                        <span className={`text-xs px-3 py-1 rounded-full ${zone.priority === 'high' ? 'bg-red-100 text-red-700' :
+                                                zone.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                                                    'bg-green-100 text-green-700'
+                                            }`}>
+                                            {zone.priority}
+                                        </span>
                                     </div>
-                                    <span className={`text-xs px-3 py-1 rounded-full ${zone.priority === 'high' ? 'bg-red-100 text-red-700' :
-                                            zone.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                                                'bg-green-100 text-green-700'
-                                        }`}>
-                                        {zone.priority}
-                                    </span>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="h-64 flex items-center justify-center text-gray-500">
+                                <div className="text-center">
+                                    <MapPin className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                                    <p>No problem zones identified yet</p>
                                 </div>
-                            ))}
-                        </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -329,12 +373,15 @@ const AdminDashboard = () => {
 
                             {/* Add circles for high-density zones */}
                             {topProblemZones.slice(0, 3).map((zone, index) => {
-                                const [lat, lng] = zone.location.split(',').map(Number);
+                                // Use lat/lng from zone data if available, otherwise parse from location string
+                                const lat = zone.lat || parseFloat(zone.location.split(',')[0]);
+                                const lng = zone.lng || parseFloat(zone.location.split(',')[1]);
+                                
                                 return (
                                     <Circle
                                         key={index}
                                         center={{ lat, lng }}
-                                        radius={500}
+                                        radius={Math.max(300, zone.issues * 100)} // Dynamic radius based on issue count
                                         options={{
                                             fillColor: zone.priority === 'high' ? '#ef4444' :
                                                 zone.priority === 'medium' ? '#f59e0b' : '#10b981',
@@ -356,6 +403,7 @@ const AdminDashboard = () => {
                             Larger circles = more issues in that area.
                         </p>
                     </div>
+                </div>
                 </div>
             </div>
         </div>

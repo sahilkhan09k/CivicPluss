@@ -92,11 +92,59 @@ const issueSchema = new Schema({
     resolutionConfirmed: {
         type: Boolean,
         default: false
+    },
+    // Challenge-related fields
+    adminDecisionTimestamp: {
+        type: Date,
+        default: null
+    },
+    hasChallenges: {
+        type: Boolean,
+        default: false
+    },
+    wasRestored: {
+        type: Boolean,
+        default: false
+    },
+    restoredAt: {
+        type: Date,
+        default: null
+    },
+    challengeResolved: {
+        type: Boolean,
+        default: false
+    },
+    challengeResolvedAt: {
+        type: Date,
+        default: null
+    },
+    challengeDecision: {
+        type: String,
+        enum: ['admin_wrong', 'admin_correct'],
+        default: null
+    },
+    adminDecisionOverturned: {
+        type: Boolean,
+        default: false
+    },
+    adminDecisionOverturnedAt: {
+        type: Date,
+        default: null
+    },
+    // Trust score penalty scheduling for spam reports
+    trustScorePenaltyScheduledFor: {
+        type: Date,
+        default: null
+    },
+    trustScorePenaltyApplied: {
+        type: Boolean,
+        default: false
     }
 }, { timestamps: true });
 
 // Create indexes for query performance
 issueSchema.index({ city: 1, status: 1 });
 issueSchema.index({ city: 1, priorityScore: -1 });
+issueSchema.index({ adminDecisionTimestamp: 1 }); // For challenge window validation
 
 export const Issue = mongoose.model('Issue', issueSchema);

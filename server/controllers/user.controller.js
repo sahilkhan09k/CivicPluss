@@ -26,6 +26,18 @@ const getUserIssues = asyncHandler(async (req, res) => {
     const issues = await Issue.find({reportedBy: userId})
     .sort({createdAt: -1});
 
+    // Debug logging for challenge-related fields
+    issues.forEach(issue => {
+        if (issue.hasChallenges) {
+            console.log(`🔍 Issue ${issue._id} challenge fields:`, {
+                hasChallenges: issue.hasChallenges,
+                challengeResolved: issue.challengeResolved,
+                challengeDecision: issue.challengeDecision,
+                challengeResolvedAt: issue.challengeResolvedAt
+            });
+        }
+    });
+
     return res.status(200)
     .json(new apiResponse(200, issues, "User issues fetched successfully"))
 });

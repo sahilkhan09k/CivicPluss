@@ -13,6 +13,9 @@ A full-stack web application for reporting and managing civic infrastructure iss
 - Verify other users' reports
 - Trust score system for credibility
 - City-specific issue filtering
+- **Challenge admin decisions within 24 hours**
+- **Location-verified photo evidence for appeals**
+- **AI-powered photo comparison for challenges**
 
 ### For Admins
 - City-based administration (each admin manages their city)
@@ -23,6 +26,13 @@ A full-stack web application for reporting and managing civic infrastructure iss
 - Fake report detection and user banning
 - Weekly trend analysis
 
+### For Super Admins
+- **Review user challenges to admin decisions**
+- **Side-by-side photo comparison interface**
+- **Overturn incorrect admin decisions**
+- **Challenge history and admin performance metrics**
+- **Accountability tracking for admin actions**
+
 ### Technical Features
 - AI image analysis using Groq Vision API
 - Spam and relevance detection
@@ -31,6 +41,11 @@ A full-stack web application for reporting and managing civic infrastructure iss
 - Automatic token refresh
 - City-based access control
 - Real-time issue density visualization
+- **Challenge and appeal system with 24-hour window**
+- **Geolocation validation (50-meter radius)**
+- **AI photo similarity comparison (Groq Vision)**
+- **Database transactions for atomic operations**
+- **Email notifications for challenge lifecycle**
 
 ## 📋 Tech Stack
 
@@ -244,6 +259,13 @@ civic-pulse/
 - Fake report detection
 - Automatic user banning after 3 fake reports
 
+### Photo Comparison (Challenge System)
+- AI-powered similarity scoring using Groq Vision API
+- Compares original issue photo with challenge photo
+- Similarity threshold: >50% for acceptance
+- Automatic challenge status determination
+- Confidence scoring and detailed analysis
+
 ## 🔧 API Endpoints
 
 ### Authentication
@@ -269,6 +291,13 @@ civic-pulse/
 - `GET /api/v1/issues/admin/stats` - Get admin statistics
 - `GET /api/v1/issues/priority/:priority` - Get issues by priority
 
+### Challenges (New)
+- `POST /api/v1/challenge/submit` - Submit challenge with photo and location
+- `GET /api/v1/challenge/queue` - Get challenge queue (super admin only)
+- `PUT /api/v1/challenge/review/:id` - Review challenge (super admin only)
+- `GET /api/v1/challenge/history` - Get challenge history with stats (super admin only)
+- `GET /api/v1/challenge/user` - Get user's challenges
+
 ## 🎨 UI Components
 
 ### Shared Components
@@ -277,11 +306,14 @@ civic-pulse/
 - `Footer` - Footer component
 - `GoogleMapsWrapper` - Google Maps loader
 - `CitySelector` - City dropdown
+- `ChallengeButton` - 24-hour countdown timer for challenges
+- `ChallengeModal` - Location verification and photo capture interface
+- `ChallengeHistory` - Challenge history with admin metrics
 
 ### Pages
 - Home, About, Login, Register
 - User: Dashboard, Report Issue, My Issues, Verify Issues, Profile
-- Admin: Dashboard, Manage Issues, Analytics, Issue Intelligence, Feedback Metrics
+- Admin: Dashboard, Manage Issues, Analytics, Issue Intelligence, Feedback Metrics, **Challenge Queue**, **Challenge History**
 - Public: City Map with heatmap
 
 ## 🚦 Issue Priority System
@@ -302,6 +334,50 @@ Levels: High, Medium, Low
 - -10 for fake reports
 - -20 for spam
 - Users banned after 3 fake reports
+- **No penalty for failed challenges** (encourages accountability)
+
+## ⚖️ Challenge and Appeal System
+
+### How It Works
+
+1. **Admin Decision**: Admin marks issue as spam or resolved
+2. **24-Hour Window**: User has 24 hours to challenge the decision
+3. **Location Verification**: User must be within 50 meters of original issue location
+4. **Photo Evidence**: User captures live photo (camera only, no gallery)
+5. **AI Comparison**: Groq Vision API compares photos and calculates similarity score
+6. **Automatic Decision**: 
+   - Similarity >50% → Challenge accepted, sent to super admin review
+   - Similarity ≤50% → Challenge rejected, admin decision stands
+7. **Super Admin Review**: Reviews accepted challenges with side-by-side photos
+8. **Final Decision**: 
+   - Admin Wrong → Issue restored to original state
+   - Admin Correct → Issue state maintained
+
+### Challenge Features
+
+- **Real-time countdown timer** showing time remaining in 24-hour window
+- **Geolocation validation** using haversine distance calculation
+- **Live camera capture** with HTML5 `capture="environment"` attribute
+- **AI similarity scoring** with confidence levels
+- **Email notifications** at each stage (submission, acceptance, rejection, review)
+- **Database transactions** ensuring atomic operations during review
+- **Admin accountability tracking** with overturn rates and performance metrics
+
+### Challenge Rejection Scenarios
+
+- Location >50 meters from original issue
+- Photo similarity ≤50%
+- Challenge window expired (>24 hours)
+- Duplicate challenge attempt
+- Invalid photo format or size
+
+### Super Admin Tools
+
+- **Challenge Queue**: View all accepted challenges sorted by oldest first
+- **Photo Comparison**: Side-by-side view of original and challenge photos
+- **Review Interface**: Make decisions with optional notes
+- **Challenge History**: Complete audit trail with filtering
+- **Admin Metrics**: Track overturn rates and admin performance
 
 ## 🌐 Deployment
 
@@ -401,6 +477,13 @@ VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
 - Clear browser cookies and localStorage
 - Check JWT secrets are set
 - Verify MongoDB connection
+
+### Challenge system issues
+- **Location permission denied**: Enable location services in browser settings
+- **Challenge button not appearing**: Verify issue has `adminDecisionTimestamp` set
+- **Photo comparison failing**: Check Groq API key and rate limits
+- **Challenge queue empty**: Only shows challenges with status "accepted"
+- **Super admin access denied**: Verify user role is `super_admin` in database
 
 ## 📄 License
 

@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { Star, ThumbsUp, MessageSquare, Loader2 } from 'lucide-react';
 import Sidebar from '../../components/Sidebar';
 import { apiService } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 const FeedbackMetrics = () => {
+    const { user } = useAuth();
     const [issues, setIssues] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -84,8 +86,15 @@ const FeedbackMetrics = () => {
 
             <div className="flex-1 ml-64 p-8">
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold mb-2">Feedback & Trust Metrics</h1>
-                    <p className="text-gray-600">Accountability and citizen satisfaction tracking</p>
+                    <h1 className="text-3xl font-bold mb-2">
+                        {user?.role === 'super_admin' ? 'State Feedback & Trust Metrics' : 'Feedback & Trust Metrics'}
+                    </h1>
+                    <p className="text-gray-600">
+                        {user?.role === 'super_admin' 
+                            ? 'State-wide accountability and citizen satisfaction oversight'
+                            : 'Accountability and citizen satisfaction tracking'
+                        }
+                    </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">

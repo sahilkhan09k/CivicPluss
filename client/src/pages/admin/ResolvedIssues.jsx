@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Search, CheckCircle, Loader2, Eye, Calendar, User } from 'lucide-react';
+import { Search, CheckCircle, Loader2, Eye, Calendar, User, MapPin } from 'lucide-react';
 import Sidebar from '../../components/Sidebar';
 import { apiService } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 const ResolvedIssues = () => {
+    const { user } = useAuth();
     const [issues, setIssues] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -68,8 +70,15 @@ const ResolvedIssues = () => {
 
             <div className="flex-1 ml-64 p-8">
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold mb-2">Resolved Issues</h1>
-                    <p className="text-gray-600">View all issues that have been successfully resolved</p>
+                    <h1 className="text-3xl font-bold mb-2">
+                        {user?.role === 'super_admin' ? 'All Resolved Issues' : 'Resolved Issues'}
+                    </h1>
+                    <p className="text-gray-600">
+                        {user?.role === 'super_admin' 
+                            ? 'View all resolved issues across the state for oversight and quality monitoring'
+                            : 'View all issues that have been successfully resolved'
+                        }
+                    </p>
                 </div>
 
                 <div className="card mb-6 bg-gradient-to-r from-green-500 to-emerald-600 text-white">
@@ -85,15 +94,40 @@ const ResolvedIssues = () => {
                 </div>
 
                 <div className="card mb-6">
-                    <div className="relative flex items-center">
-                        <Search className="absolute left-3 h-5 w-5 text-gray-400 pointer-events-none" />
-                        <input
-                            type="text"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="input-field pl-10 w-full"
-                            placeholder="Search resolved issues..."
-                        />
+                    <div className="flex flex-col md:flex-row gap-4">
+                        <div className="flex-1 relative flex items-center">
+                            <Search className="absolute left-3 h-5 w-5 text-gray-400 pointer-events-none" />
+                            <input
+                                type="text"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="input-field pl-10 w-full"
+                                placeholder="Search resolved issues..."
+                            />
+                        </div>
+                        {user?.role === 'super_admin' && (
+                            <div className="md:w-48">
+                                <select
+                                    className="input-field w-full"
+                                    onChange={(e) => {
+                                        // Add city filter logic here if needed
+                                        console.log('City filter:', e.target.value);
+                                    }}
+                                >
+                                    <option value="">All Cities</option>
+                                    <option value="Mumbai">Mumbai</option>
+                                    <option value="Delhi">Delhi</option>
+                                    <option value="Bangalore">Bangalore</option>
+                                    <option value="Chennai">Chennai</option>
+                                    <option value="Kolkata">Kolkata</option>
+                                    <option value="Hyderabad">Hyderabad</option>
+                                    <option value="Pune">Pune</option>
+                                    <option value="Ahmedabad">Ahmedabad</option>
+                                    <option value="Jaipur">Jaipur</option>
+                                    <option value="Surat">Surat</option>
+                                </select>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -105,6 +139,9 @@ const ResolvedIssues = () => {
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reporter</th>
+                                    {user?.role === 'super_admin' && (
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">City</th>
+                                    )}
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Resolved Date</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -125,6 +162,14 @@ const ResolvedIssues = () => {
                                                 <div className="text-xs text-gray-500">{issue.reportedBy?.email || 'N/A'}</div>
                                             </div>
                                         </td>
+                                        {user?.role === 'super_admin' && (
+                                            <td className="px-6 py-4 text-sm text-gray-600">
+                                                <div className="flex items-center">
+                                                    <MapPin className="h-4 w-4 mr-1 text-gray-400" />
+                                                    {issue.city || 'Unknown'}
+                                                </div>
+                                            </td>
+                                        )}
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className={`text-xs px-2 py-1 rounded ${
                                                 issue.priority === 'High' ? 'bg-red-100 text-red-700' :
@@ -164,7 +209,7 @@ const ResolvedIssues = () => {
                 )}
 
                 {showModal && selectedIssue && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="fixed inset-0 bg-gray-900 bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                         <div className="bg-white rounded-lg p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className="text-2xl font-bold">Issue Details #{selectedIssue._id.slice(-6)}</h2>

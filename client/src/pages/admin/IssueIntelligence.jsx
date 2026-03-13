@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Brain, Filter, TrendingUp, Loader2 } from 'lucide-react';
 import Sidebar from '../../components/Sidebar';
 import { apiService } from '../../services/api';
@@ -36,6 +37,11 @@ const IssueIntelligence = () => {
     };
 
     const filteredIssues = issues.filter(issue => {
+        // Only show issues that are not resolved or in progress
+        const isActionable = issue.status !== 'Resolved' && issue.status !== 'In Progress';
+        
+        if (!isActionable) return false;
+        
         if (filterPriority === 'all') return true;
         return issue.priority === filterPriority;
     });
@@ -90,7 +96,11 @@ const IssueIntelligence = () => {
                     <h2 className="text-xl font-bold mb-4">Top 5 Issues to Fix Today</h2>
                     <div className="space-y-3">
                         {topActions.map((issue, index) => (
-                            <div key={issue._id} className="p-4 bg-gradient-to-r from-gray-50 to-white border-l-4 border-primary-600 rounded-lg">
+                            <Link 
+                                key={issue._id} 
+                                to={`/admin/issue/${issue._id}`}
+                                className="block p-4 bg-gradient-to-r from-gray-50 to-white border-l-4 border-primary-600 rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+                            >
                                 <div className="flex items-start justify-between mb-2">
                                     <div className="flex items-start space-x-3">
                                         <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white font-bold">
@@ -116,7 +126,7 @@ const IssueIntelligence = () => {
                                         {issue.priority}
                                     </span>
                                 </div>
-                            </div>
+                            </Link>
                         ))}
                     </div>
                 </div>
@@ -162,7 +172,11 @@ const IssueIntelligence = () => {
 
                     <div className="space-y-3">
                         {filteredIssues.map(issue => (
-                            <div key={issue._id} className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition cursor-pointer">
+                            <Link 
+                                key={issue._id} 
+                                to={`/admin/issue/${issue._id}`}
+                                className="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition cursor-pointer"
+                            >
                                 <div className="flex items-center justify-between">
                                     <div className="flex-1">
                                         <p className="font-medium">{issue.title}</p>
@@ -174,7 +188,7 @@ const IssueIntelligence = () => {
                                         {issue.priority}
                                     </span>
                                 </div>
-                            </div>
+                            </Link>
                         ))}
                     </div>
 

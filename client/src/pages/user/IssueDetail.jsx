@@ -1,24 +1,75 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Loader, AlertCircle, MapPin, Calendar, TrendingUp, ArrowLeft, User } from 'lucide-react';
+import { Loader, AlertCircle, MapPin, Calendar, TrendingUp, ArrowLeft, User, CheckCircle, XCircle } from 'lucide-react';
 import Sidebar from '../../components/Sidebar';
 import { apiService } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
+import ChallengeButton from '../../components/ChallengeButton';
+import ChallengeModal from '../../components/ChallengeModal';
 
 const IssueDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { user, refreshUser } = useAuth();
     const [issue, setIssue] = useState(null);
+    const [challengeData, setChallengeData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [isChallengeModalOpen, setIsChallengeModalOpen] = useState(false);
 
     useEffect(() => {
         fetchIssueDetail();
     }, [id]);
 
+    // Show toast notification for recent challenge decisions
+    useEffect(() => {
+        if (challengeData && challengeData.status === 'reviewed') {
+            const reviewDate = new Date(challengeData.reviewedAt);
+            const now = new Date();
+            const hoursSinceReview = (now - reviewDate) / (1000 * 60 * 60);
+            
+            // Show toast if decision was made within last 24 hours
+            if (hoursSinceReview <= 24) {
+                const message = challengeData.reviewDecision === 'admin_wrong' 
+                    ? '🎉 Your challenge was successful! The issue has been restored.'
+                    : '📋 Your challenge has been reviewed. The original decision was upheld.';
+                
+                // Refresh user data to show updated trust score
+                refreshUser().then(() => {
+                    console.log('User data refreshed after challenge decision');
+                });
+                
+                // Simple toast notification (you could replace this with a proper toast library)
+                setTimeout(() => {
+                    if (window.confirm(message + '\n\nWould you like to see the details?')) {
+                        // Scroll to the notification section
+                        document.querySelector('[data-challenge-notification]')?.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'center' 
+                        });
+                    }
+                }, 1000);
+            }
+        }
+    }, [challengeData, refreshUser]);
+
     const fetchIssueDetail = async () => {
         try {
             const response = await apiService.getIssueById(id);
             setIssue(response.data);
+            
+            // If issue has challenges, fetch challenge details for the current user
+            if (response.data.hasChallenges && user?._id) {
+                try {
+                    const challengeResponse = await apiService.getUserChallenges();
+                    const userChallenges = challengeResponse.data?.challenges || [];
+                    const issueChallenge = userChallenges.find(c => c.issueId?._id === id);
+                    setChallengeData(issueChallenge);
+                } catch (challengeErr) {
+                    console.error('Error fetching challenge data:', challengeErr);
+                    // Don't fail the whole component if challenge fetch fails
+                }
+            }
         } catch (err) {
             console.error('Error fetching issue:', err);
             setError('Failed to load issue details');
@@ -55,14 +106,109 @@ const IssueDetail = () => {
         });
     };
 
+    const handleChallengeClick = () => {
+        setIsChallengeModalOpen(true);
+    };
+
+    const handleChallengeModalClose = () => {
+        setIsChallengeModalOpen(false);
+        // Refresh issue data to show updated challenge status
+        fetchIssueDetail();
+        // Refresh user data to show updated trust score if challenge was processed
+        refreshUser().then(() => {
+            console.log('User data refreshed after challenge modal close');
+        });
+    };
+
+    // Check if current user is the issue owner
+    const isIssueOwner = user && issue && (
+        issue.reportedBy?._id === user._id || issue.reportedBy === user._id
+    );
+
+    // Check if issue has admin decision (resolved or marked as fake)
+    const hasAdminDecision = issue && (
+        issue.status === 'Resolved' || issue.reportedAsFake === true
+    ) && issue.adminDecisionTimestamp;
+
+    const getChallengeStatusBadge = (issue) => {
+        // Check if issue has challenges
+        if (!issue || !issue.hasChallenges) return null;
+
+        // Check if challenge has been resolved (new field from backend)
+        if (issue.challengeResolved) {
+            if (issue.challengeDecision === 'admin_wrong') {
+                return (
+                    <span className="px-4 py-2 rounded-xl text-sm font-semibold border text-green-700 bg-green-100 border-green-200">
+                        ✅ Challenge Won
+                    </span>
+                );
+            } else if (issue.challengeDecision === 'admin_correct') {
+                return (
+                    <span className="px-4 py-2 rounded-xl text-sm font-semibold border text-red-700 bg-red-100 border-red-200">
+                        ❌ Challenge Lost
+                    </span>
+                );
+            }
+        }
+
+        // If we have detailed challenge data from API, show specific status
+        if (challengeData) {
+            const { status, reviewDecision, reviewedAt, similarityScore } = challengeData;
+            
+            if (status === 'reviewed') {
+                if (reviewDecision === 'admin_wrong') {
+                    return (
+                        <span className="px-4 py-2 rounded-xl text-sm font-semibold border text-green-700 bg-green-100 border-green-200">
+                            ✅ Challenge Won
+                        </span>
+                    );
+                } else if (reviewDecision === 'admin_correct') {
+                    return (
+                        <span className="px-4 py-2 rounded-xl text-sm font-semibold border text-red-700 bg-red-100 border-red-200">
+                            ❌ Challenge Lost
+                        </span>
+                    );
+                }
+            } else if (status === 'accepted') {
+                return (
+                    <span className="px-4 py-2 rounded-xl text-sm font-semibold border text-blue-700 bg-blue-100 border-blue-200">
+                        ⏳ Challenge Under Review
+                    </span>
+                );
+            } else if (status === 'rejected') {
+                return (
+                    <span className="px-4 py-2 rounded-xl text-sm font-semibold border text-orange-700 bg-orange-100 border-orange-200">
+                        ⚠️ Challenge Rejected
+                    </span>
+                );
+            }
+        }
+
+        // Fallback for when we don't have detailed challenge data
+        return (
+            <span className="px-4 py-2 rounded-xl text-sm font-semibold border text-purple-700 bg-purple-100 border-purple-200">
+                ⚖️ Challenge Submitted
+            </span>
+        );
+    };
+
     if (loading) {
         return (
-            <div className="flex min-h-screen bg-gradient-to-br from-gray-50 via-primary-50/30 to-accent-50/20">
+            <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 relative overflow-hidden">
+                {/* Background Elements */}
+                <div className="absolute inset-0">
+                    <div className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-br from-primary-200/20 to-transparent rounded-full blur-3xl animate-float"></div>
+                    <div className="absolute bottom-20 right-20 w-80 h-80 bg-gradient-to-br from-accent-200/20 to-transparent rounded-full blur-3xl animate-float" style={{animationDelay: '3s'}}></div>
+                </div>
+
                 <Sidebar />
-                <div className="flex-1 ml-64 flex items-center justify-center">
+                <div className="relative z-10 flex-1 ml-64 flex items-center justify-center">
                     <div className="text-center">
-                        <Loader className="h-12 w-12 text-primary-600 animate-spin mx-auto mb-4" />
-                        <p className="text-gray-600">Loading issue details...</p>
+                        <div className="bg-gradient-to-br from-primary-500 to-accent-500 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl animate-pulse">
+                            <Loader className="h-10 w-10 text-white animate-spin" />
+                        </div>
+                        <h2 className="text-2xl font-bold mb-2 text-gray-900">Loading Issue Details</h2>
+                        <p className="text-gray-600 text-lg">Gathering information...</p>
                     </div>
                 </div>
             </div>
@@ -71,13 +217,21 @@ const IssueDetail = () => {
 
     if (error || !issue) {
         return (
-            <div className="flex min-h-screen bg-gradient-to-br from-gray-50 via-primary-50/30 to-accent-50/20">
+            <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 relative overflow-hidden">
+                {/* Background Elements */}
+                <div className="absolute inset-0">
+                    <div className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-br from-primary-200/20 to-transparent rounded-full blur-3xl animate-float"></div>
+                    <div className="absolute bottom-20 right-20 w-80 h-80 bg-gradient-to-br from-accent-200/20 to-transparent rounded-full blur-3xl animate-float" style={{animationDelay: '3s'}}></div>
+                </div>
+
                 <Sidebar />
-                <div className="flex-1 ml-64 flex items-center justify-center">
+                <div className="relative z-10 flex-1 ml-64 flex items-center justify-center">
                     <div className="text-center">
-                        <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-                        <h2 className="text-2xl font-bold text-gray-900 mb-2">Issue Not Found</h2>
-                        <p className="text-gray-600 mb-6">{error || 'The issue you are looking for does not exist'}</p>
+                        <div className="bg-gradient-to-br from-red-500 to-red-600 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
+                            <AlertCircle className="h-10 w-10 text-white" />
+                        </div>
+                        <h2 className="text-3xl font-bold text-gray-900 mb-4">Issue Not Found</h2>
+                        <p className="text-gray-600 text-lg mb-8">{error || 'The issue you are looking for does not exist'}</p>
                         <button onClick={() => navigate('/my-issues')} className="btn-primary">
                             Back to My Issues
                         </button>
@@ -88,33 +242,42 @@ const IssueDetail = () => {
     }
 
     return (
-        <div className="flex min-h-screen bg-gradient-to-br from-gray-50 via-primary-50/30 to-accent-50/20">
+        <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 relative overflow-hidden">
+            {/* Background Elements */}
+            <div className="absolute inset-0">
+                <div className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-br from-primary-200/20 to-transparent rounded-full blur-3xl animate-float"></div>
+                <div className="absolute bottom-20 right-20 w-80 h-80 bg-gradient-to-br from-accent-200/20 to-transparent rounded-full blur-3xl animate-float" style={{animationDelay: '3s'}}></div>
+            </div>
+
             <Sidebar />
 
-            <div className="flex-1 ml-64 p-8">
+            <div className="relative z-10 flex-1 ml-64 p-8">
                 <button
                     onClick={() => navigate(-1)}
-                    className="mb-6 flex items-center text-gray-600 hover:text-primary-600 transition-colors"
+                    className="mb-8 flex items-center text-gray-600 hover:text-primary-600 transition-all duration-300 transform hover:scale-105 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-xl shadow-lg hover:shadow-xl"
                 >
                     <ArrowLeft className="h-5 w-5 mr-2" />
-                    Back
+                    <span className="font-medium">Back</span>
                 </button>
 
                 <div className="max-w-4xl mx-auto">
                     {/* Header */}
                     <div className="card-gradient mb-6">
-                        <div className="flex items-start justify-between mb-4">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
                             <h1 className="text-3xl font-bold text-gray-900">{issue.title}</h1>
-                            <div className="flex items-center space-x-2">
+                            <div className="flex flex-wrap items-center gap-2">
                                 <span className={`px-4 py-2 rounded-xl text-sm font-semibold border ${getPriorityColor(issue.priority)}`}>
                                     {issue.priority} Priority
                                 </span>
                                 <span className={`px-4 py-2 rounded-xl text-sm font-semibold border ${getStatusColor(issue.status)}`}>
                                     {issue.status}
                                 </span>
+                                <div className="flex-shrink-0">
+                                    {getChallengeStatusBadge(issue)}
+                                </div>
                             </div>
                         </div>
-
+                            
                         <div className="flex items-center space-x-6 text-sm text-gray-600">
                             <div className="flex items-center">
                                 <User className="h-4 w-4 mr-2" />
@@ -128,8 +291,32 @@ const IssueDetail = () => {
                                 <TrendingUp className="h-4 w-4 mr-2" />
                                 Score: {issue.priorityScore}/100
                             </div>
+                            {isIssueOwner && (
+                                <div className="flex items-center">
+                                    <span className="text-xs text-gray-500 mr-2">Your Trust Score:</span>
+                                    <span className={`text-sm font-semibold px-2 py-1 rounded ${
+                                        (user?.trustScore ?? 100) >= 75 ? 'text-green-700 bg-green-100' :
+                                        (user?.trustScore ?? 100) >= 50 ? 'text-yellow-700 bg-yellow-100' :
+                                        (user?.trustScore ?? 100) >= 25 ? 'text-orange-700 bg-orange-100' :
+                                        'text-red-700 bg-red-100'
+                                    }`}>
+                                        {user?.trustScore ?? 100}/100
+                                    </span>
+                                </div>
+                            )}
                         </div>
                     </div>
+
+                    {/* Challenge Button - Show only for issue owner with admin decision and challenge not resolved */}
+                    {isIssueOwner && hasAdminDecision && !issue.challengeResolved && (
+                        <div className="mb-6">
+                            <ChallengeButton 
+                                issue={issue}
+                                onChallengeClick={handleChallengeClick}
+                                userHasSubmittedChallenge={issue.hasChallenges}
+                            />
+                        </div>
+                    )}
 
                     {/* Image */}
                     {issue.imageUrl && (
@@ -215,6 +402,13 @@ const IssueDetail = () => {
                         </div>
                     )}
                 </div>
+
+                {/* Challenge Modal */}
+                <ChallengeModal
+                    isOpen={isChallengeModalOpen}
+                    onClose={handleChallengeModalClose}
+                    issue={issue}
+                />
             </div>
         </div>
     );

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Menu, X, MapPin } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import NotificationBell from './NotificationBell';
 
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -30,6 +31,7 @@ const Navbar = () => {
 
                         {user ? (
                             <>
+                                <NotificationBell />
                                 <Link to={user.role === 'admin' ? '/admin' : '/dashboard'} className="link-hover">
                                     Dashboard
                                 </Link>

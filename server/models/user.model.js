@@ -45,6 +45,28 @@ const userSchema = new Schema({
         min: 0,
         max: 100
     },
+    lastTrustScoreUpdate: {
+        type: Date,
+        default: null
+    },
+    lastTrustScoreReason: {
+        type: String,
+        default: null
+    },
+    adminStats: {
+        overturnedDecisions: {
+            type: Number,
+            default: 0
+        },
+        totalChallenges: {
+            type: Number,
+            default: 0
+        },
+        lastOverturnedAt: {
+            type: Date,
+            default: null
+        }
+    },
     isBanned: {
         type: Boolean,
         default: false

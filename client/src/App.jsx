@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { SocketProvider } from './context/SocketContext';
 
 import Home from './pages/Home';
 import CityMap from './pages/CityMap';
@@ -18,9 +19,13 @@ import Profile from './pages/user/Profile';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import IssueIntelligence from './pages/admin/IssueIntelligence';
 import ManageIssues from './pages/admin/ManageIssues';
+import InProgressIssues from './pages/admin/InProgressIssues';
 import ResolvedIssues from './pages/admin/ResolvedIssues';
 import Analytics from './pages/admin/Analytics';
 import FeedbackMetrics from './pages/admin/FeedbackMetrics';
+import ChallengeQueue from './pages/admin/ChallengeQueue';
+import ChallengeHistory from './pages/admin/ChallengeHistory';
+import AdminIssueDetail from './pages/admin/AdminIssueDetail';
 
 const ProtectedRoute = ({ children, adminOnly = false }) => {
   const { user, loading } = useAuth();
@@ -85,7 +90,8 @@ const PublicRoute = ({ children }) => {
 function App() {
   return (
     <AuthProvider>
-      <Router>
+      <SocketProvider>
+        <Router>
         <Routes>
           {/* Public Routes - Redirect to dashboard if logged in */}
           <Route path="/" element={<PublicRoute><Home /></PublicRoute>} />
@@ -171,6 +177,14 @@ function App() {
             }
           />
           <Route
+            path="/admin/in-progress"
+            element={
+              <ProtectedRoute adminOnly={true}>
+                <InProgressIssues />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/admin/resolved"
             element={
               <ProtectedRoute adminOnly={true}>
@@ -194,11 +208,36 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/admin/challenge-queue"
+            element={
+              <ProtectedRoute adminOnly={true}>
+                <ChallengeQueue />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/challenge-history"
+            element={
+              <ProtectedRoute adminOnly={true}>
+                <ChallengeHistory />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/issue/:id"
+            element={
+              <ProtectedRoute adminOnly={true}>
+                <AdminIssueDetail />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Catch all */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Router>
+      </SocketProvider>
     </AuthProvider>
   );
 }

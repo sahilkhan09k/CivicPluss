@@ -25,7 +25,9 @@ const ManageIssues = () => {
         try {
             setLoading(true);
             const response = await apiService.getAllIssues();
-            setIssues(response.data);
+            // Show only pending issues - others have dedicated pages
+            const pendingIssues = response.data.filter(issue => issue.status === 'Pending');
+            setIssues(pendingIssues);
         } catch (err) {
             setError(err.message || 'Failed to fetch issues');
         } finally {
@@ -105,8 +107,9 @@ const ManageIssues = () => {
         const confirmed = window.confirm(
             `Are you sure you want to report this issue as FAKE?\n\n` +
             `This will:\n` +
-            `• Reduce the user's trust score by 25 points\n` +
-            `• Ban the user if trust score reaches 0\n\n` +
+            `• Schedule a trust score penalty of -25 points in 24 hours\n` +
+            `• Give the user 24 hours to challenge this decision\n` +
+            `• Ban the user if trust score reaches 0 after penalty\n\n` +
             `User: ${issue.reportedBy?.name || 'Unknown'}\n` +
             `Email: ${issue.reportedBy?.email || 'Unknown'}`
         );
@@ -148,10 +151,22 @@ const ManageIssues = () => {
 
     if (loading) {
         return (
-            <div className="flex min-h-screen bg-gray-50">
+            <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 relative overflow-hidden">
+                {/* Background Elements */}
+                <div className="absolute inset-0">
+                    <div className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-br from-primary-200/20 to-transparent rounded-full blur-3xl animate-float"></div>
+                    <div className="absolute bottom-20 right-20 w-80 h-80 bg-gradient-to-br from-accent-200/20 to-transparent rounded-full blur-3xl animate-float" style={{animationDelay: '3s'}}></div>
+                </div>
+
                 <Sidebar isAdmin={true} />
-                <div className="flex-1 ml-64 p-8 flex items-center justify-center">
-                    <Loader2 className="h-12 w-12 animate-spin text-primary-600" />
+                <div className="relative z-10 flex-1 ml-64 p-8 flex items-center justify-center">
+                    <div className="text-center">
+                        <div className="bg-gradient-to-br from-primary-500 to-accent-500 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl animate-pulse">
+                            <Loader2 className="h-10 w-10 text-white animate-spin" />
+                        </div>
+                        <h2 className="text-2xl font-bold mb-2 text-gray-900">Loading Issues</h2>
+                        <p className="text-gray-600 text-lg">Gathering pending issues...</p>
+                    </div>
                 </div>
             </div>
         );
@@ -159,11 +174,23 @@ const ManageIssues = () => {
 
     if (error) {
         return (
-            <div className="flex min-h-screen bg-gray-50">
+            <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 relative overflow-hidden">
+                {/* Background Elements */}
+                <div className="absolute inset-0">
+                    <div className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-br from-primary-200/20 to-transparent rounded-full blur-3xl animate-float"></div>
+                    <div className="absolute bottom-20 right-20 w-80 h-80 bg-gradient-to-br from-accent-200/20 to-transparent rounded-full blur-3xl animate-float" style={{animationDelay: '3s'}}></div>
+                </div>
+
                 <Sidebar isAdmin={true} />
-                <div className="flex-1 ml-64 p-8">
-                    <div className="card bg-red-50 border-2 border-red-200 text-center py-12">
-                        <p className="text-red-700 text-lg">{error}</p>
+                <div className="relative z-10 flex-1 ml-64 p-8">
+                    <div className="max-w-2xl mx-auto">
+                        <div className="card-gradient text-center py-16 border-2 border-red-200 bg-gradient-to-br from-red-50 to-red-100/50">
+                            <div className="bg-gradient-to-br from-red-500 to-red-600 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
+                                <AlertTriangle className="h-10 w-10 text-white" />
+                            </div>
+                            <h2 className="text-3xl font-bold text-red-700 mb-4">Error Loading Issues</h2>
+                            <p className="text-red-700 text-lg">{error}</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -171,14 +198,38 @@ const ManageIssues = () => {
     }
 
     return (
-        <div className="flex min-h-screen bg-gray-50">
+        <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 relative overflow-hidden">
+            {/* Background Elements */}
+            <div className="absolute inset-0">
+                <div className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-br from-primary-200/20 to-transparent rounded-full blur-3xl animate-float"></div>
+                <div className="absolute bottom-20 right-20 w-80 h-80 bg-gradient-to-br from-accent-200/20 to-transparent rounded-full blur-3xl animate-float" style={{animationDelay: '3s'}}></div>
+            </div>
+
             <Sidebar isAdmin={true} />
 
-            <div className="flex-1 ml-64 p-8">
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold mb-2">Manage Issues</h1>
-                    <p className="text-gray-600">Update status and manage reported issues</p>
-                </div>
+            <div className="relative z-10 flex-1 ml-64 p-8">
+                <div className="max-w-7xl mx-auto">
+                    <div className="mb-12 animate-fade-in">
+                        <div className="flex items-center space-x-4 mb-6">
+                            <div className="bg-gradient-to-br from-primary-500 to-accent-500 p-4 rounded-2xl shadow-lg">
+                                <Edit className="h-10 w-10 text-white" />
+                            </div>
+                            <div>
+                                <h1 className="text-5xl font-black bg-gradient-to-r from-primary-600 via-primary-700 to-accent-600 bg-clip-text text-transparent tracking-tight">
+                                    Manage Issues
+                                </h1>
+                                <p className="text-gray-600 text-xl font-medium">Review and update status of newly reported issues</p>
+                                <div className="mt-4 flex items-center gap-4 text-sm">
+                                    <span className="bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-700 px-4 py-2 rounded-2xl font-bold border border-yellow-200 shadow-lg backdrop-blur-sm">
+                                        Pending Issues Only
+                                    </span>
+                                    <span className="text-gray-500">
+                                        Move issues to "In Progress" or "Resolved" status
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                 {/* Search */}
                 <div className="card mb-6">
@@ -189,60 +240,63 @@ const ManageIssues = () => {
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="input-field pl-12 w-full"
-                            placeholder="Search issues by title or description..."
+                            placeholder="Search pending issues..."
                         />
                     </div>
                 </div>
 
                 {/* Issues Table */}
-                <div className="card overflow-hidden">
+                <div className="card overflow-hidden shadow-sm">
                     <div className="overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-gray-50 border-b">
+                            <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reporter</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">ID</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Title</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Reporter</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Priority</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Score</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
+                            <tbody className="bg-white divide-y divide-gray-100">
                                 {filteredIssues.map(issue => (
-                                    <tr key={issue._id} className={`hover:bg-gray-50 ${issue.reportedAsFake ? 'bg-red-50' : ''}`}>
+                                    <tr key={issue._id} className={`hover:bg-gray-50 transition-colors duration-150 ${issue.reportedAsFake ? 'bg-red-50 border-l-4 border-red-400' : ''}`}>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                            #{issue._id.slice(-6)}
+                                            <span className="bg-gray-100 px-2 py-1 rounded-md text-xs font-mono">
+                                                #{issue._id.slice(-6)}
+                                            </span>
                                         </td>
                                         <td className="px-6 py-4 text-sm text-gray-900">
-                                            {issue.title}
+                                            <div className="font-medium">{issue.title}</div>
                                             {issue.reportedAsFake && (
-                                                <span className="ml-2 text-xs px-2 py-1 bg-red-100 text-red-700 rounded">
-                                                    FAKE
+                                                <span className="mt-1 inline-flex items-center text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full font-medium">
+                                                    <AlertTriangle className="h-3 w-3 mr-1" />
+                                                    FAKE REPORT
                                                 </span>
                                             )}
                                         </td>
                                         <td className="px-6 py-4 text-sm text-gray-600">
                                             <div>
-                                                <div className="font-medium">{issue.reportedBy?.name || 'Unknown'}</div>
+                                                <div className="font-medium text-gray-900">{issue.reportedBy?.name || 'Unknown'}</div>
                                                 <div className="text-xs text-gray-500">{issue.reportedBy?.email || 'N/A'}</div>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`text-xs px-2 py-1 rounded ${issue.priority === 'High' ? 'bg-red-100 text-red-700' :
-                                                issue.priority === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
-                                                    'bg-green-100 text-green-700'
+                                            <span className={`text-xs px-3 py-1 rounded-full font-medium ${issue.priority === 'High' ? 'bg-red-100 text-red-700 border border-red-200' :
+                                                issue.priority === 'Medium' ? 'bg-yellow-100 text-yellow-700 border border-yellow-200' :
+                                                    'bg-green-100 text-green-700 border border-green-200'
                                                 }`}>
                                                 {issue.priority}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-700">
                                             {issue.priorityScore}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`text-xs px-2 py-1 rounded ${getStatusColor(issue.status)}`}>
+                                            <span className={`text-xs px-3 py-1 rounded-full font-medium ${getStatusColor(issue.status)} border`}>
                                                 {issue.status}
                                             </span>
                                         </td>
@@ -252,7 +306,7 @@ const ManageIssues = () => {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm space-y-2">
                                             <button
                                                 onClick={() => handleUpdateIssue(issue)}
-                                                className="text-primary-600 hover:text-primary-700 font-medium flex items-center"
+                                                className="cursor-pointer text-primary-600 hover:text-primary-700 hover:bg-primary-50 font-medium flex items-center px-3 py-1.5 rounded-md transition-all duration-200 border border-transparent hover:border-primary-200"
                                             >
                                                 <Edit className="h-4 w-4 mr-1" />
                                                 Update
@@ -261,7 +315,7 @@ const ManageIssues = () => {
                                                 <button
                                                     onClick={() => handleReportAsFake(issue)}
                                                     disabled={reportingFake}
-                                                    className="text-red-600 hover:text-red-700 font-medium flex items-center disabled:opacity-50"
+                                                    className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50 font-medium flex items-center px-3 py-1.5 rounded-md transition-all duration-200 border border-transparent hover:border-red-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
                                                     <AlertTriangle className="h-4 w-4 mr-1" />
                                                     Report Fake
@@ -277,27 +331,36 @@ const ManageIssues = () => {
 
                 {filteredIssues.length === 0 && (
                     <div className="card text-center py-12 mt-6">
-                        <p className="text-gray-600 text-lg">No issues found</p>
-                        <p className="text-sm text-gray-500 mt-2">Try adjusting your search</p>
+                        <p className="text-gray-600 text-lg">
+                            {searchTerm ? 'No pending issues match your search' : 'No pending issues found'}
+                        </p>
+                        <p className="text-sm text-gray-500 mt-2">
+                            {searchTerm ? 'Try adjusting your search terms' : 'All issues have been processed or are in progress'}
+                        </p>
                     </div>
                 )}
 
                 {/* Update Modal */}
                 {showModal && selectedIssue && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-lg p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                            <h2 className="text-2xl font-bold mb-6">Update Issue #{selectedIssue._id.slice(-6)}</h2>
+                    <div className="fixed inset-0 bg-gray-900 bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-xl shadow-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                            <div className="flex items-center justify-between mb-6">
+                                <h2 className="text-2xl font-bold text-gray-900">Update Issue</h2>
+                                <span className="bg-gray-100 px-3 py-1 rounded-lg text-sm font-mono text-gray-600">
+                                    #{selectedIssue._id.slice(-6)}
+                                </span>
+                            </div>
 
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
-                                    <p className="text-gray-900">{selectedIssue.title}</p>
+                            <div className="space-y-6">
+                                <div className="bg-gray-50 p-4 rounded-lg">
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Issue Title</label>
+                                    <p className="text-gray-900 font-medium">{selectedIssue.title}</p>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-3">Update Status</label>
                                     <select
-                                        className="input-field"
+                                        className="input-field cursor-pointer hover:border-primary-400 focus:border-primary-500 focus:ring-primary-500"
                                         value={newStatus}
                                         onChange={(e) => setNewStatus(e.target.value)}
                                     >
@@ -383,20 +446,25 @@ const ManageIssues = () => {
                                     </>
                                 )}
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Current Priority</label>
-                                    <span className={`text-xs px-3 py-1 rounded-full ${selectedIssue.priority === 'High' ? 'bg-red-100 text-red-700' :
-                                        selectedIssue.priority === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
-                                            'bg-green-100 text-green-700'
-                                        }`}>
-                                        {selectedIssue.priority} (Score: {selectedIssue.priorityScore})
-                                    </span>
+                                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Current Priority & Score</label>
+                                    <div className="flex items-center gap-3">
+                                        <span className={`text-sm px-3 py-1 rounded-full font-medium ${selectedIssue.priority === 'High' ? 'bg-red-100 text-red-700 border border-red-200' :
+                                            selectedIssue.priority === 'Medium' ? 'bg-yellow-100 text-yellow-700 border border-yellow-200' :
+                                                'bg-green-100 text-green-700 border border-green-200'
+                                            }`}>
+                                            {selectedIssue.priority}
+                                        </span>
+                                        <span className="text-sm font-semibold text-gray-700">
+                                            AI Score: {selectedIssue.priorityScore}
+                                        </span>
+                                    </div>
                                 </div>
 
-                                <div className="flex gap-3 pt-4">
+                                <div className="flex gap-3 pt-6">
                                     <button
                                         onClick={handleSaveUpdate}
-                                        className="btn-primary flex items-center"
+                                        className="btn-primary flex items-center cursor-pointer hover:shadow-md transition-all duration-200"
                                         disabled={updating}
                                     >
                                         {updating ? (
@@ -408,7 +476,7 @@ const ManageIssues = () => {
                                     </button>
                                     <button
                                         onClick={() => setShowModal(false)}
-                                        className="btn-secondary"
+                                        className="btn-secondary cursor-pointer hover:shadow-md transition-all duration-200"
                                         disabled={updating}
                                     >
                                         Cancel
@@ -418,6 +486,7 @@ const ManageIssues = () => {
                         </div>
                     </div>
                 )}
+                </div>
             </div>
         </div>
     );

@@ -28,6 +28,28 @@ const Dashboard = () => {
     };
 
     const myIssues = issues.filter(issue => issue.reportedBy?._id === user?._id || issue.reportedBy === user?._id);
+    const communityIssues = issues.filter(issue => {
+        // Filter out current user's issues
+        const isNotMyIssue = issue.reportedBy?._id !== user?._id && issue.reportedBy !== user?._id;
+        
+        // Filter by same city if both user and issue have city information
+        let isSameCity = true; // Default to true if city info is not available
+        if (user?.city && issue.city) {
+            isSameCity = issue.city === user.city;
+        }
+        
+        return isNotMyIssue && isSameCity;
+    });
+    
+    // Debug logging (can be removed in production)
+    console.log('Dashboard filtering debug:', {
+        totalIssues: issues.length,
+        myIssues: myIssues.length,
+        communityIssues: communityIssues.length,
+        userCity: user?.city,
+        userId: user?._id
+    });
+    
     const resolvedIssues = myIssues.filter(issue => issue.status === 'Resolved');
     const pendingIssues = myIssues.filter(issue => issue.status === 'Pending');
     const inProgressIssues = myIssues.filter(issue => issue.status === 'In Progress');
@@ -55,6 +77,35 @@ const Dashboard = () => {
             case 'Low': return 'text-blue-600 bg-blue-100';
             default: return 'text-gray-600 bg-gray-100';
         }
+    };
+
+    const getChallengeStatusBadge = (issue) => {
+        // Check if issue has challenges
+        if (!issue.hasChallenges) return null;
+
+        // Check if challenge has been resolved
+        if (issue.challengeResolved) {
+            if (issue.challengeDecision === 'admin_wrong') {
+                return (
+                    <span className="px-3 py-1 rounded-full font-medium text-green-600 bg-green-100">
+                        ✅ Challenge Won
+                    </span>
+                );
+            } else if (issue.challengeDecision === 'admin_correct') {
+                return (
+                    <span className="px-3 py-1 rounded-full font-medium text-red-600 bg-red-100">
+                        ❌ Challenge Lost
+                    </span>
+                );
+            }
+        }
+
+        // Challenge is still pending review
+        return (
+            <span className="px-3 py-1 rounded-full font-medium text-blue-600 bg-blue-100">
+                ⏳ Challenge Pending
+            </span>
+        );
     };
 
     if (loading) {
@@ -201,7 +252,11 @@ const Dashboard = () => {
                     ) : (
                         <div className="space-y-4">
                             {myIssues.slice(0, 5).map((issue) => (
-                                <div key={issue._id} className="bg-white p-4 rounded-xl border border-gray-200 hover:shadow-md transition-all duration-200">
+                                <Link 
+                                    key={issue._id} 
+                                    to={`/issue/${issue._id}`}
+                                    className="block bg-white p-4 rounded-xl border border-gray-200 hover:shadow-md transition-all duration-200 cursor-pointer hover:border-primary-300"
+                                >
                                     <div className="flex items-start justify-between">
                                         <div className="flex-1">
                                             <h3 className="font-semibold text-gray-900 mb-2">{issue.title}</h3>
@@ -213,6 +268,7 @@ const Dashboard = () => {
                                                 <span className={`px-3 py-1 rounded-full font-medium ${getPriorityColor(issue.priority)}`}>
                                                     {issue.priority} Priority
                                                 </span>
+                                                {getChallengeStatusBadge(issue)}
                                                 <span className="text-gray-500 flex items-center">
                                                     <MapPin className="h-4 w-4 mr-1" />
                                                     {issue.location?.lat?.toFixed(4)}, {issue.location?.lng?.toFixed(4)}
@@ -227,7 +283,7 @@ const Dashboard = () => {
                                             />
                                         )}
                                     </div>
-                                </div>
+                                </Link>
                             ))}
                         </div>
                     )}
@@ -237,32 +293,44 @@ const Dashboard = () => {
                 <div className="card-gradient">
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-2xl font-bold text-gray-900">Community Issues</h2>
-                        <span className="text-sm text-gray-500">{issues.length} total issues</span>
+                        <span className="text-sm text-gray-500">{communityIssues.length} community issues</span>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {issues.slice(0, 6).map((issue) => (
-                            <div key={issue._id} className="bg-white p-4 rounded-xl border border-gray-200 hover:shadow-md transition-all duration-200">
-                                {issue.imageUrl && (
-                                    <img
-                                        src={issue.imageUrl}
-                                        alt={issue.title}
-                                        className="w-full h-32 object-cover rounded-lg mb-3"
-                                    />
-                                )}
-                                <h3 className="font-semibold text-gray-900 mb-2 line-clamp-1">{issue.title}</h3>
-                                <p className="text-sm text-gray-600 mb-3 line-clamp-2">{issue.description}</p>
-                                <div className="flex items-center justify-between text-xs">
-                                    <span className={`px-2 py-1 rounded-full font-medium ${getPriorityColor(issue.priority)}`}>
-                                        {issue.priority}
-                                    </span>
-                                    <span className="text-gray-500">
-                                        Score: {issue.priorityScore}
-                                    </span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                    {communityIssues.length === 0 ? (
+                        <div className="text-center py-12">
+                            <AlertCircle className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                            <p className="text-gray-500 mb-2">No community issues found in your area</p>
+                            <p className="text-sm text-gray-400">Issues from other users in your city will appear here</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {communityIssues.slice(0, 6).map((issue) => (
+                                <Link 
+                                    key={issue._id} 
+                                    to={`/issue/${issue._id}`}
+                                    className="block bg-white p-4 rounded-xl border border-gray-200 hover:shadow-md transition-all duration-200 cursor-pointer hover:border-primary-300"
+                                >
+                                    {issue.imageUrl && (
+                                        <img
+                                            src={issue.imageUrl}
+                                            alt={issue.title}
+                                            className="w-full h-32 object-cover rounded-lg mb-3"
+                                        />
+                                    )}
+                                    <h3 className="font-semibold text-gray-900 mb-2 line-clamp-1">{issue.title}</h3>
+                                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">{issue.description}</p>
+                                    <div className="flex items-center justify-between text-xs">
+                                        <span className={`px-2 py-1 rounded-full font-medium ${getPriorityColor(issue.priority)}`}>
+                                            {issue.priority}
+                                        </span>
+                                        <span className="text-gray-500">
+                                            Score: {issue.priorityScore}
+                                        </span>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

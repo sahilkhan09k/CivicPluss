@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Upload, MapPin, CheckCircle, AlertCircle, Loader, Clock, AlertTriangle } from 'lucide-react';
+import { Upload, MapPin, CheckCircle, AlertCircle, Loader, Clock, AlertTriangle, X } from 'lucide-react';
 import Sidebar from '../../components/Sidebar';
 import { useNavigate } from 'react-router-dom';
 import { apiService } from '../../services/api';
@@ -13,6 +13,7 @@ const ReportIssue = () => {
         lat: '',
         lng: ''
     });
+    const [imagePreview, setImagePreview] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [errorType, setErrorType] = useState('');
@@ -31,8 +32,26 @@ const ReportIssue = () => {
                 setError('Image size should be less than 10MB');
                 return;
             }
+            
+            // Create image preview
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+            
             setFormData({ ...formData, image: file });
             setError('');
+        }
+    };
+
+    const clearImage = () => {
+        setFormData({ ...formData, image: null });
+        setImagePreview(null);
+        // Reset the file input
+        const fileInput = document.getElementById('image-upload');
+        if (fileInput) {
+            fileInput.value = '';
         }
     };
 
@@ -236,16 +255,41 @@ const ReportIssue = () => {
                                     id="image-upload"
                                     required
                                 />
-                                <label htmlFor="image-upload" className="cursor-pointer">
-                                    <div className="bg-primary-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <Upload className="h-8 w-8 text-primary-600" />
-                                    </div>
-                                    <p className="text-gray-700 font-medium">Click to upload or drag and drop</p>
-                                    <p className="text-sm text-gray-500 mt-1">PNG, JPG up to 10MB</p>
-                                </label>
-                                {formData.image && (
-                                    <div className="mt-4 p-3 bg-success-50 rounded-lg inline-block">
-                                        <p className="text-sm text-success-700 font-medium">✓ {formData.image.name}</p>
+                                
+                                {!imagePreview ? (
+                                    <label htmlFor="image-upload" className="cursor-pointer">
+                                        <div className="bg-primary-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                                            <Upload className="h-8 w-8 text-primary-600" />
+                                        </div>
+                                        <p className="text-gray-700 font-medium">Click to upload or drag and drop</p>
+                                        <p className="text-sm text-gray-500 mt-1">PNG, JPG up to 10MB</p>
+                                    </label>
+                                ) : (
+                                    <div className="space-y-4">
+                                        <div className="relative">
+                                            <img
+                                                src={imagePreview}
+                                                alt="Issue preview"
+                                                className="max-w-full max-h-64 mx-auto rounded-lg shadow-md object-contain"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={clearImage}
+                                                className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 shadow-lg transition-colors"
+                                                title="Remove image"
+                                            >
+                                                <X className="h-4 w-4" />
+                                            </button>
+                                        </div>
+                                        <div className="flex items-center justify-center space-x-4">
+                                            <div className="flex items-center text-success-700 bg-success-50 px-3 py-2 rounded-lg">
+                                                <CheckCircle className="h-4 w-4 mr-2" />
+                                                <span className="text-sm font-medium">{formData.image?.name}</span>
+                                            </div>
+                                            <label htmlFor="image-upload" className="text-sm text-primary-600 hover:text-primary-700 font-medium cursor-pointer underline">
+                                                Change Image
+                                            </label>
+                                        </div>
                                     </div>
                                 )}
                             </div>

@@ -81,6 +81,20 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('user', JSON.stringify(updatedProfile));
     };
 
+    const refreshUser = async () => {
+        try {
+            const response = await apiService.getCurrentUser();
+            if (response.success) {
+                setUser(response.data);
+                localStorage.setItem('user', JSON.stringify(response.data));
+                return response.data;
+            }
+        } catch (error) {
+            console.error('Error refreshing user data:', error);
+        }
+        return null;
+    };
+
     const logout = async () => {
         try {
             await apiService.logout();
@@ -93,7 +107,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, updateUser, logout, loading }}>
+        <AuthContext.Provider value={{ user, login, updateUser, refreshUser, logout, loading }}>
             {children}
         </AuthContext.Provider>
     );

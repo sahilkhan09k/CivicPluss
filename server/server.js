@@ -12,6 +12,9 @@ dotenv.config({
 
 import { app } from "./app.js";
 import { connectDB } from "./db/index.js";
+import { startTrustScoreScheduler } from "./utils/trustScoreScheduler.js";
+import { socketServer } from "./socket/socketServer.js";
+import { createServer } from 'http';
 
 const tempDir = path.join(__dirname, 'public', 'temp');
 if (!fs.existsSync(tempDir)) {
@@ -22,12 +25,22 @@ if (!fs.existsSync(tempDir)) {
 connectDB().then(() => {
     const port = process.env.PORT || 5000;
 
+    // Create HTTP server
+    const server = createServer(app);
+    
+    // Initialize Socket.IO
+    socketServer.initialize(server);
+
     app.on('error', (error) => {
         console.error(`Error starting server: ${error.message}`);
     });
 
-    app.listen(port, () => {
-        console.log(`Server is running on port ${port}`);
+    server.listen(port, () => {
+        console.log(`🚀 Server is running on port ${port}`);
+        console.log(`🔌 Socket.IO server ready for connections`);
+        
+        // Start the trust score penalty scheduler
+        startTrustScoreScheduler();
     });
 }).catch((error) => {
     console.error(`Failed to connect to the database: ${error.message}`);

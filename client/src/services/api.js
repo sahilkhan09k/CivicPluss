@@ -12,6 +12,128 @@ class ApiService {
         this.baseURL = API_BASE_URL;
     }
 
+    /**
+     * Map backend error messages to user-friendly messages
+     */
+    getUserFriendlyErrorMessage(error, endpoint) {
+        const status = error.status;
+        const message = error.message || '';
+        const data = error.data || {};
+
+        // Challenge-specific error handling
+        if (endpoint.includes('/challenge')) {
+            // Location errors
+            if (message.includes('location') || message.includes('Location')) {
+                if (message.includes('denied') || message.includes('permission')) {
+                    return 'Location access denied. Please enable location services in your browser settings and try again.';
+                }
+                if (message.includes('unavailable') || message.includes('Unable')) {
+                    return 'Unable to determine your location. Please ensure GPS is enabled and try again.';
+                }
+                if (message.includes('timeout') || message.includes('timed out')) {
+                    return 'Location request timed out. Please try again.';
+                }
+                if (message.includes('too far') || message.includes('50 meters') || message.includes('distance')) {
+                    return `You are too far from the issue location. You must be within 50 meters to submit a challenge.`;
+                }
+            }
+
+            // Photo upload errors
+            if (message.includes('image') || message.includes('photo') || message.includes('file')) {
+                if (message.includes('format') || message.includes('type')) {
+                    return 'Invalid image format. Please use JPEG, PNG, or WebP.';
+                }
+                if (message.includes('size') || message.includes('large') || message.includes('5MB')) {
+                    return 'Image file size exceeds 5MB. Please capture a new photo.';
+                }
+                if (message.includes('upload') || message.includes('failed')) {
+                    return 'Failed to upload photo. Please check your connection and try again.';
+                }
+            }
+
+            // Challenge window errors
+            if (message.includes('window') || message.includes('expired') || message.includes('24 hours')) {
+                return 'Challenge window has expired (24 hours passed). You can no longer challenge this decision.';
+            }
+            if (message.includes('already submitted') || message.includes('duplicate')) {
+                return 'You have already submitted a challenge for this issue.';
+            }
+            if (message.includes('no admin decision') || message.includes('not been decided')) {
+                return 'This issue has not been decided by an admin yet. There is nothing to challenge.';
+            }
+
+            // Validation errors
+            if (message.includes('similarity') || message.includes('too low')) {
+                return 'Photo similarity too low (must be >50%). The photos do not appear to show the same issue.';
+            }
+
+            // AI analysis errors
+            if (message.includes('AI') || message.includes('analysis') || message.includes('Groq')) {
+                if (status === 503 || message.includes('unavailable') || message.includes('service')) {
+                    return 'Photo comparison service is temporarily unavailable. Please try again in a few moments.';
+                }
+                return 'Failed to analyze photos. Please try again.';
+            }
+
+            // Authorization errors for challenge endpoints
+            if (status === 403) {
+                if (message.includes('super admin') || message.includes('super_admin')) {
+                    return 'You do not have permission to access this resource. Only super admins can review challenges.';
+                }
+                if (message.includes('own issues') || message.includes('your own')) {
+                    return 'You can only challenge decisions on your own issues.';
+                }
+                return 'You do not have permission to perform this action.';
+            }
+
+            // Not found errors
+            if (status === 404) {
+                if (message.includes('challenge')) {
+                    return 'Challenge not found. It may have been removed or does not exist.';
+                }
+                if (message.includes('issue')) {
+                    return 'Issue not found. Please verify the issue ID.';
+                }
+            }
+
+            // Conflict errors
+            if (status === 409) {
+                return 'A challenge already exists for this issue. You cannot submit multiple challenges.';
+            }
+        }
+
+        // Generic error handling by status code
+        if (status === 400) {
+            return data.message || message || 'Invalid request. Please check your input and try again.';
+        }
+        if (status === 401) {
+            return 'Please log in to continue.';
+        }
+        if (status === 403) {
+            return 'You do not have permission to perform this action.';
+        }
+        if (status === 404) {
+            return 'The requested resource was not found.';
+        }
+        if (status === 413) {
+            return 'File size too large. Please use a smaller file.';
+        }
+        if (status === 500) {
+            return 'Server error. Please try again later.';
+        }
+        if (status === 503) {
+            return 'Service temporarily unavailable. Please try again later.';
+        }
+
+        // Network errors
+        if (error.message === 'Failed to fetch' || error.message.includes('network')) {
+            return 'Network error. Please check your internet connection and try again.';
+        }
+
+        // Default fallback
+        return message || 'An unexpected error occurred. Please try again.';
+    }
+
     async request(endpoint, options = {}) {
         const url = `${this.baseURL}${endpoint}`;
 
@@ -63,12 +185,21 @@ class ApiService {
                 const error = new Error(data.message || `HTTP error! status: ${response.status}`);
                 error.status = response.status;
                 error.data = data;
+                
+                // Enhance error message with user-friendly version
+                error.userMessage = this.getUserFriendlyErrorMessage(error, endpoint);
                 throw error;
             }
 
             return data;
         } catch (error) {
             console.error('API Error:', error);
+            
+            // If error doesn't have userMessage yet, add it
+            if (!error.userMessage) {
+                error.userMessage = this.getUserFriendlyErrorMessage(error, endpoint);
+            }
+            
             throw error;
         }
     }
@@ -123,12 +254,21 @@ class ApiService {
                 const error = new Error(data.message || `HTTP error! status: ${response.status}`);
                 error.status = response.status;
                 error.data = data;
+                
+                // Enhance error message with user-friendly version
+                error.userMessage = this.getUserFriendlyErrorMessage(error, endpoint);
                 throw error;
             }
 
             return data;
         } catch (error) {
             console.error('Upload Error:', error);
+            
+            // If error doesn't have userMessage yet, add it
+            if (!error.userMessage) {
+                error.userMessage = this.getUserFriendlyErrorMessage(error, endpoint);
+            }
+            
             throw error;
         }
     }
@@ -227,6 +367,78 @@ class ApiService {
         return this.request('/auth/resend-otp', {
             method: 'POST',
             body: JSON.stringify({ email }),
+        });
+    }
+
+    // Challenge API methods
+    async submitChallenge(formData) {
+        console.log('🚀 Submitting challenge to:', `${this.baseURL}/challenge/submit`);
+        return this.uploadRequest('/challenge/submit', formData);
+    }
+
+    async getChallengeQueue(filters = {}) {
+        const queryParams = new URLSearchParams();
+        if (filters.status) queryParams.append('status', filters.status);
+        if (filters.adminId) queryParams.append('adminId', filters.adminId);
+        if (filters.dateFrom) queryParams.append('dateFrom', filters.dateFrom);
+        if (filters.dateTo) queryParams.append('dateTo', filters.dateTo);
+        
+        const queryString = queryParams.toString();
+        return this.request(`/challenge/queue${queryString ? `?${queryString}` : ''}`);
+    }
+
+    async reviewChallenge(challengeId, decision, reviewNotes = '') {
+        return this.request(`/challenge/review/${challengeId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ decision, reviewNotes }),
+        });
+    }
+
+    async getChallengeHistory(filters = {}) {
+        const queryParams = new URLSearchParams();
+        if (filters.userId) queryParams.append('userId', filters.userId);
+        if (filters.issueId) queryParams.append('issueId', filters.issueId);
+        if (filters.status) queryParams.append('status', filters.status);
+        if (filters.adminId) queryParams.append('adminId', filters.adminId);
+        if (filters.reviewedBy) queryParams.append('reviewedBy', filters.reviewedBy);
+        if (filters.dateFrom) queryParams.append('dateFrom', filters.dateFrom);
+        if (filters.dateTo) queryParams.append('dateTo', filters.dateTo);
+        
+        const queryString = queryParams.toString();
+        return this.request(`/challenge/history${queryString ? `?${queryString}` : ''}`);
+    }
+
+    // Notification API methods
+    async getUserNotifications(options = {}) {
+        const queryParams = new URLSearchParams();
+        if (options.page) queryParams.append('page', options.page);
+        if (options.limit) queryParams.append('limit', options.limit);
+        if (options.unreadOnly) queryParams.append('unreadOnly', options.unreadOnly);
+        
+        const queryString = queryParams.toString();
+        return this.request(`/notifications${queryString ? `?${queryString}` : ''}`);
+    }
+
+    async getUnreadNotificationCount() {
+        return this.request('/notifications/unread-count');
+    }
+
+    async markNotificationAsRead(notificationId) {
+        return this.request(`/notifications/${notificationId}/read`, {
+            method: 'PUT'
+        });
+    }
+
+    async markAllNotificationsAsRead() {
+        return this.request('/notifications/mark-all-read', {
+            method: 'PUT'
+        });
+    }
+
+    async sendSystemAnnouncement(data) {
+        return this.request('/notifications/system-announcement', {
+            method: 'POST',
+            body: JSON.stringify(data)
         });
     }
 }
