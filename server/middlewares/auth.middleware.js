@@ -25,6 +25,11 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
             throw new apiError(403, "Your account has been permanently banned due to multiple fake reports")
         }
 
+        // Check trust score - block access if trust score is 0 or below (except for admins)
+        if (user.role === 'user' && user.trustScore <= 0) {
+            throw new apiError(403, "Your account has been suspended due to low trust score. Your trust score has reached zero due to multiple violations. Please contact support if you believe this is an error.")
+        }
+
         req.user = user
         next()
     } catch (error) {
@@ -50,7 +55,8 @@ export const optionalVerifyJWT = asyncHandler(async (req, res, next) => {
 
         const user = await User.findById(decodedInfo?._id).select("-password -refreshToken")
 
-        if (user && !user.isBanned) {
+        // Only set user if they exist, are not banned, and have valid trust score (or are admin)
+        if (user && !user.isBanned && (user.role !== 'user' || user.trustScore > 0)) {
             req.user = user;
         } else {
             req.user = null;

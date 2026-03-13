@@ -96,6 +96,16 @@ export const loginUser = asyncHandler(async (req, res) => {
   const isValid = await user.isPasswordCorrect(password);
   if (!isValid) throw new apiError(401, "Invalid credentials");
 
+  // Check if user is banned
+  if (user.isBanned) {
+    throw new apiError(403, "Your account has been permanently banned due to multiple fake reports. You cannot access your account.");
+  }
+
+  // Check trust score - block login if trust score is 0 or below (except for admins)
+  if (user.role === 'user' && user.trustScore <= 0) {
+    throw new apiError(403, "Your account has been suspended due to low trust score. Your trust score has reached zero due to multiple violations. Please contact support if you believe this is an error.");
+  }
+
   const { accessToken, refreshToken } =
     await generateAccessAndRefreshToken(user._id);
 
@@ -156,6 +166,16 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
   const user = await User.findById(decoded._id);
   if (!user || user.refreshToken !== incomingRefreshToken) {
     throw new apiError(401, "Invalid refresh token");
+  }
+
+  // Check if user is banned
+  if (user.isBanned) {
+    throw new apiError(403, "Your account has been permanently banned due to multiple fake reports");
+  }
+
+  // Check trust score - block refresh if trust score is 0 or below (except for admins)
+  if (user.role === 'user' && user.trustScore <= 0) {
+    throw new apiError(403, "Your account has been suspended due to low trust score. Your trust score has reached zero due to multiple violations. Please contact support if you believe this is an error.");
   }
 
   const { accessToken, refreshToken } =

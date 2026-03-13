@@ -33,10 +33,12 @@ const Login = () => {
 
             if (err.message.includes('permanently banned')) {
                 setError('Your account has been permanently banned due to multiple fake reports. You cannot access the platform.');
+            } else if (err.message.includes('suspended due to low trust score')) {
+                setError('Your account has been suspended due to low trust score. Your trust score has reached zero due to multiple violations. Please contact support if you believe this is an error.');
             } else if (err.message.includes('Invalid credentials') || err.message.includes('401')) {
                 setError('Invalid email or password. Please check your credentials.');
             } else if (err.message.includes('403')) {
-                setError('Access denied. Your account may have been banned.');
+                setError('Access denied. Your account may have been suspended or banned.');
             } else {
                 setError(err.message || 'Login failed. Please try again.');
             }

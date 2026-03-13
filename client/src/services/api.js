@@ -110,6 +110,14 @@ class ApiService {
             return 'Please log in to continue.';
         }
         if (status === 403) {
+            // Trust score suspension
+            if (message.includes('suspended due to low trust score') || message.includes('trust score has reached zero')) {
+                return 'Your account has been suspended due to low trust score. Your trust score has reached zero due to multiple violations. Please contact support if you believe this is an error.';
+            }
+            // Permanent ban
+            if (message.includes('permanently banned')) {
+                return 'Your account has been permanently banned due to multiple fake reports. You cannot access the platform.';
+            }
             return 'You do not have permission to perform this action.';
         }
         if (status === 404) {
@@ -181,6 +189,17 @@ class ApiService {
                         throw new Error('Session expired. Please login again.');
                     }
                 }
+
+                // Handle trust score suspension (403 errors)
+                if (response.status === 403 && (data.message?.includes('suspended due to low trust score') || data.message?.includes('trust score has reached zero'))) {
+                    console.log('User suspended due to low trust score');
+                    // Clear user data and redirect to login
+                    localStorage.removeItem('user');
+                    const currentPath = window.location.pathname;
+                    if (currentPath !== '/login' && currentPath !== '/register' && currentPath !== '/') {
+                        window.location.href = '/login';
+                    }
+                }
                 
                 const error = new Error(data.message || `HTTP error! status: ${response.status}`);
                 error.status = response.status;
@@ -248,6 +267,17 @@ class ApiService {
                             window.location.href = '/login';
                         }
                         throw new Error('Session expired. Please login again.');
+                    }
+                }
+
+                // Handle trust score suspension (403 errors)
+                if (response.status === 403 && (data.message?.includes('suspended due to low trust score') || data.message?.includes('trust score has reached zero'))) {
+                    console.log('User suspended due to low trust score');
+                    // Clear user data and redirect to login
+                    localStorage.removeItem('user');
+                    const currentPath = window.location.pathname;
+                    if (currentPath !== '/login' && currentPath !== '/register' && currentPath !== '/') {
+                        window.location.href = '/login';
                     }
                 }
                 
