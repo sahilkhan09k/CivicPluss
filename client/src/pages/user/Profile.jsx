@@ -121,35 +121,37 @@ const Profile = () => {
 
                     {/* Profile Card */}
                     <div className="card-gradient mb-8">
-                        <div className="flex items-start justify-between mb-6">
-                            <div className="flex items-start space-x-6 flex-1">
-                                <div className="bg-gradient-to-br from-primary-500 to-primary-700 w-24 h-24 rounded-2xl flex items-center justify-center flex-shrink-0">
-                                    <User className="h-12 w-12 text-white" />
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+                            <div className="flex items-start space-x-4 flex-1 min-w-0">
+                                <div className="bg-gradient-to-br from-primary-500 to-primary-700 w-16 h-16 md:w-24 md:h-24 rounded-2xl flex items-center justify-center flex-shrink-0">
+                                    <User className="h-8 w-8 md:h-12 md:w-12 text-white" />
                                 </div>
-                                <div className="flex-1">
+                                <div className="flex-1 min-w-0">
                                     {!editing ? (
                                         <>
-                                            <h2 className="text-3xl font-bold text-gray-900 mb-2">{user?.name}</h2>
-                                            <div className="space-y-2 text-gray-600">
-                                                <div className="flex items-center">
-                                                    <Mail className="h-5 w-5 mr-3 text-primary-600" />
-                                                    {user?.email}
+                                            <h2 className="text-xl md:text-3xl font-bold text-gray-900 mb-2 truncate">{user?.name}</h2>
+                                            <div className="space-y-1.5 text-gray-600 text-sm">
+                                                <div className="flex items-center min-w-0">
+                                                    <Mail className="h-4 w-4 mr-2 text-primary-600 flex-shrink-0" />
+                                                    <span className="truncate">{user?.email}</span>
                                                 </div>
                                                 {user?.city && (
-                                                    <div className="flex items-center">
-                                                        <Award className="h-5 w-5 mr-3 text-primary-600" />
-                                                        City: <span className="ml-2 px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm font-semibold">
+                                                    <div className="flex items-center flex-wrap gap-1">
+                                                        <Award className="h-4 w-4 mr-1 text-primary-600 flex-shrink-0" />
+                                                        <span>City:</span>
+                                                        <span className="px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full text-xs font-semibold">
                                                             {user.city}
                                                         </span>
                                                     </div>
                                                 )}
                                                 <div className="flex items-center">
-                                                    <Calendar className="h-5 w-5 mr-3 text-primary-600" />
-                                                    Member since {user?.createdAt ? formatDate(user.createdAt) : 'N/A'}
+                                                    <Calendar className="h-4 w-4 mr-2 text-primary-600 flex-shrink-0" />
+                                                    <span className="text-xs">Member since {user?.createdAt ? formatDate(user.createdAt) : 'N/A'}</span>
                                                 </div>
-                                                <div className="flex items-center">
-                                                    <Award className="h-5 w-5 mr-3 text-primary-600" />
-                                                    Role: <span className="ml-2 px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm font-semibold">
+                                                <div className="flex items-center flex-wrap gap-1">
+                                                    <Award className="h-4 w-4 mr-1 text-primary-600 flex-shrink-0" />
+                                                    <span>Role:</span>
+                                                    <span className="px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full text-xs font-semibold">
                                                         {user?.role || 'User'}
                                                     </span>
                                                 </div>
@@ -179,11 +181,11 @@ const Profile = () => {
                                     )}
                                 </div>
                             </div>
-                            <div className="flex space-x-2">
+                            <div className="flex space-x-2 flex-shrink-0">
                                 {!editing ? (
                                     <button
                                         onClick={handleEditToggle}
-                                        className="flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors"
+                                        className="flex items-center space-x-2 px-3 py-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors text-sm"
                                     >
                                         <Edit2 className="h-4 w-4" />
                                         <span>Edit</span>
@@ -193,7 +195,7 @@ const Profile = () => {
                                         <button
                                             onClick={handleUpdateProfile}
                                             disabled={updating}
-                                            className="flex items-center space-x-2 px-4 py-2 bg-success-600 text-white rounded-xl hover:bg-success-700 transition-colors disabled:opacity-50"
+                                            className="flex items-center space-x-2 px-3 py-2 bg-success-600 text-white rounded-xl hover:bg-success-700 transition-colors disabled:opacity-50 text-sm"
                                         >
                                             <Save className="h-4 w-4" />
                                             <span>{updating ? 'Saving...' : 'Save'}</span>
@@ -201,7 +203,7 @@ const Profile = () => {
                                         <button
                                             onClick={handleEditToggle}
                                             disabled={updating}
-                                            className="flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-colors disabled:opacity-50"
+                                            className="flex items-center space-x-2 px-3 py-2 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-colors disabled:opacity-50 text-sm"
                                         >
                                             <X className="h-4 w-4" />
                                             <span>Cancel</span>
@@ -309,14 +311,14 @@ const Profile = () => {
                         </div>
 
                         {/* Trust Score Info */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-3">
                             <div className={`p-4 rounded-xl border-2 ${trustScore === 100 ? 'bg-green-50 border-green-200' :
                                     trustScore >= 75 ? 'bg-yellow-50 border-yellow-200' :
                                         trustScore >= 50 ? 'bg-orange-50 border-orange-200' :
                                             'bg-red-50 border-red-200'
                                 }`}>
-                                <p className="text-sm font-semibold text-gray-700 mb-2">What is Trust Score?</p>
-                                <p className="text-xs text-gray-600">
+                                <p className="text-sm font-semibold text-gray-700 mb-1">What is Trust Score?</p>
+                                <p className="text-xs text-gray-600 leading-relaxed">
                                     Your trust score reflects the quality of your reports. It starts at 100 and decreases if reports are marked as fake by admins.
                                 </p>
                             </div>
@@ -326,8 +328,8 @@ const Profile = () => {
                                         trustScore >= 50 ? 'bg-orange-50 border-orange-200' :
                                             'bg-red-50 border-red-200'
                                 }`}>
-                                <p className="text-sm font-semibold text-gray-700 mb-2">How to Maintain It?</p>
-                                <p className="text-xs text-gray-600">
+                                <p className="text-sm font-semibold text-gray-700 mb-1">How to Maintain It?</p>
+                                <p className="text-xs text-gray-600 leading-relaxed">
                                     Submit genuine reports with accurate information and real images. Fake reports reduce your score by 25 points.
                                 </p>
                             </div>
@@ -376,22 +378,22 @@ const Profile = () => {
 
                     {/* Impact Score */}
                     <div className="card-gradient">
-                        <h2 className="text-2xl font-bold text-gray-900 mb-6">Civic Impact Score</h2>
-                        <div className="bg-gradient-to-r from-primary-500 to-accent-500 p-4 md:p-8 rounded-2xl text-white text-center">
-                            <p className="text-lg mb-2">Your Total Impact</p>
-                            <p className="text-6xl font-bold mb-4">{impactScore}</p>
-                            <p className="text-primary-100">
+                        <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">Civic Impact Score</h2>
+                        <div className="bg-gradient-to-r from-primary-500 to-accent-500 p-6 md:p-8 rounded-2xl text-white text-center">
+                            <p className="text-base md:text-lg mb-2">Your Total Impact</p>
+                            <p className="text-5xl md:text-6xl font-bold mb-4">{impactScore}</p>
+                            <p className="text-primary-100 text-sm md:text-base">
                                 Keep reporting issues to increase your impact score!
                             </p>
                         </div>
-                        <div className="mt-6 grid grid-cols-2 gap-4 text-sm">
-                            <div className="bg-white p-4 rounded-xl border border-gray-200">
-                                <p className="text-gray-600 mb-1">Resolved Issues</p>
-                                <p className="text-xl font-bold text-primary-600">+10 points each</p>
+                        <div className="mt-6 grid grid-cols-2 gap-3 text-sm">
+                            <div className="bg-white p-3 md:p-4 rounded-xl border border-gray-200">
+                                <p className="text-gray-600 mb-1 text-xs md:text-sm">Resolved Issues</p>
+                                <p className="text-lg md:text-xl font-bold text-primary-600">+10 pts each</p>
                             </div>
-                            <div className="bg-white p-4 rounded-xl border border-gray-200">
-                                <p className="text-gray-600 mb-1">In Progress Issues</p>
-                                <p className="text-xl font-bold text-primary-600">+5 points each</p>
+                            <div className="bg-white p-3 md:p-4 rounded-xl border border-gray-200">
+                                <p className="text-gray-600 mb-1 text-xs md:text-sm">In Progress</p>
+                                <p className="text-lg md:text-xl font-bold text-primary-600">+5 pts each</p>
                             </div>
                         </div>
                     </div>

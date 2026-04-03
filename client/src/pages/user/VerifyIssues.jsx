@@ -153,7 +153,7 @@ const VerifyIssues = () => {
                     </div>
 
                     {/* Sort Controls */}
-                    <div className="mb-6 flex items-center gap-3">
+                    <div className="mb-6 flex flex-wrap items-center gap-2">
                         <span className="text-sm font-semibold text-gray-600">Sort by:</span>
                         {[
                             { key: 'priority', label: '🎯 Priority' },
@@ -163,7 +163,7 @@ const VerifyIssues = () => {
                             <button
                                 key={key}
                                 onClick={() => setSortBy(key)}
-                                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                                className={`px-3 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
                                     sortBy === key
                                         ? 'bg-primary-600 text-white shadow-lg'
                                         : 'bg-white text-gray-600 border border-gray-200 hover:border-primary-300'
@@ -172,7 +172,7 @@ const VerifyIssues = () => {
                                 {label}
                             </button>
                         ))}
-                        <span className="ml-auto text-sm text-gray-500 font-medium">
+                        <span className="text-sm text-gray-500 font-medium ml-auto">
                             {sortedIssues.length} issues
                         </span>
                     </div>
