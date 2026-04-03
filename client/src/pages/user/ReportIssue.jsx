@@ -166,16 +166,16 @@ const ReportIssue = () => {
     }
 
     return (
-        <div className="flex min-h-screen bg-gradient-to-br from-gray-50 via-primary-50/30 to-accent-50/20">
+        <div className="flex min-h-screen bg-gradient-to-br from-gray-50 via-primary-50/30 to-accent-50/20 overflow-x-hidden">
             <Sidebar />
 
-            <div className="flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8">
-                <div className="max-w-3xl mx-auto">
+            <div className="flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8 min-w-0 overflow-x-hidden">
+                <div className="max-w-3xl mx-auto w-full">
                     <div className="mb-8">
-                        <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent">
+                        <h1 className="text-2xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent">
                             Report an Issue
                         </h1>
-                        <p className="text-gray-600 text-lg">Help improve your city by reporting civic issues</p>
+                        <p className="text-gray-600 text-sm md:text-lg">Help improve your city by reporting civic issues</p>
                     </div>
 
                     {error && (
@@ -250,7 +250,7 @@ const ReportIssue = () => {
                         {/* Image Upload */}
                         <div className="card-gradient">
                             <label className="block text-sm font-semibold text-gray-700 mb-3">Upload Image *</label>
-                            <div className="border-2 border-dashed border-primary-300 rounded-xl p-4 text-center hover:border-primary-500 hover:bg-primary-50/50 transition cursor-pointer overflow-hidden">
+                            <div className="border-2 border-dashed border-primary-300 rounded-xl p-4 text-center hover:border-primary-500 hover:bg-primary-50/50 transition cursor-pointer w-full overflow-hidden">
                                 <input
                                     type="file"
                                     accept="image/*"
@@ -261,7 +261,7 @@ const ReportIssue = () => {
                                 />
                                 
                                 {!imagePreview ? (
-                                    <label htmlFor="image-upload" className="cursor-pointer">
+                                    <label htmlFor="image-upload" className="cursor-pointer block">
                                         <div className="bg-primary-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                                             <Upload className="h-8 w-8 text-primary-600" />
                                         </div>
@@ -269,28 +269,30 @@ const ReportIssue = () => {
                                         <p className="text-sm text-gray-500 mt-1">PNG, JPG up to 10MB</p>
                                     </label>
                                 ) : (
-                                    <div className="space-y-3">
-                                        <div className="relative overflow-hidden rounded-lg">
+                                    <div className="space-y-3 w-full">
+                                        <div className="relative w-full overflow-hidden rounded-lg">
                                             <img
                                                 src={imagePreview}
                                                 alt="Issue preview"
-                                                className="w-full max-h-48 md:max-h-64 mx-auto rounded-lg shadow-md object-cover"
+                                                className="w-full h-40 md:h-56 object-cover rounded-lg shadow-md"
                                             />
                                             <button
                                                 type="button"
                                                 onClick={clearImage}
-                                                className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-lg transition-colors"
+                                                className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-lg transition-colors z-10"
                                                 title="Remove image"
                                             >
                                                 <X className="h-4 w-4" />
                                             </button>
                                         </div>
-                                        <div className="flex items-center justify-between gap-2 flex-wrap">
-                                            <div className="flex items-center text-success-700 bg-success-50 px-3 py-1.5 rounded-lg min-w-0 flex-1">
-                                                <CheckCircle className="h-4 w-4 mr-2 flex-shrink-0" />
-                                                <span className="text-xs font-medium truncate">{formData.image?.name}</span>
+                                        <div className="flex items-center gap-2 w-full overflow-hidden">
+                                            <div className="flex items-center text-success-700 bg-success-50 px-3 py-1.5 rounded-lg flex-1 min-w-0 overflow-hidden">
+                                                <CheckCircle className="h-4 w-4 mr-2 flex-shrink-0 text-success-600" />
+                                                <span className="text-xs font-medium truncate block max-w-full">
+                                                    {formData.image?.name}
+                                                </span>
                                             </div>
-                                            <label htmlFor="image-upload" className="text-sm text-primary-600 hover:text-primary-700 font-medium cursor-pointer underline flex-shrink-0">
+                                            <label htmlFor="image-upload" className="text-xs text-primary-600 hover:text-primary-700 font-semibold cursor-pointer underline flex-shrink-0 whitespace-nowrap">
                                                 Change
                                             </label>
                                         </div>
@@ -364,7 +366,7 @@ const ReportIssue = () => {
                                 <option value="Electricity">⚡ Electricity/Streetlight</option>
                                 <option value="Other">📋 Other</option>
                             </select>
-                            <p className="text-xs text-gray-500 mt-2">
+                            <p className="text-xs text-gray-500 mt-2 break-words">
                                 💡 AI will analyze your image and description to suggest the best category
                             </p>
                         </div>
@@ -395,7 +397,7 @@ const ReportIssue = () => {
                                 placeholder="Provide detailed information about the issue (location landmarks, severity, etc.)"
                                 required
                             />
-                            <p className="text-xs text-gray-500 mt-2">
+                            <p className="text-xs text-gray-500 mt-2 break-words">
                                 💡 Tip: Mention nearby landmarks (hospital, school, market) for better AI prioritization
                             </p>
                         </div>
