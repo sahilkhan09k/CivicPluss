@@ -250,7 +250,7 @@ const ReportIssue = () => {
                         {/* Image Upload */}
                         <div className="card-gradient">
                             <label className="block text-sm font-semibold text-gray-700 mb-3">Upload Image *</label>
-                            <div className="border-2 border-dashed border-primary-300 rounded-xl p-4 md:p-8 text-center hover:border-primary-500 hover:bg-primary-50/50 transition cursor-pointer">
+                            <div className="border-2 border-dashed border-primary-300 rounded-xl p-4 text-center hover:border-primary-500 hover:bg-primary-50/50 transition cursor-pointer overflow-hidden">
                                 <input
                                     type="file"
                                     accept="image/*"
@@ -269,29 +269,29 @@ const ReportIssue = () => {
                                         <p className="text-sm text-gray-500 mt-1">PNG, JPG up to 10MB</p>
                                     </label>
                                 ) : (
-                                    <div className="space-y-4">
-                                        <div className="relative">
+                                    <div className="space-y-3">
+                                        <div className="relative overflow-hidden rounded-lg">
                                             <img
                                                 src={imagePreview}
                                                 alt="Issue preview"
-                                                className="max-w-full max-h-64 mx-auto rounded-lg shadow-md object-contain"
+                                                className="w-full max-h-48 md:max-h-64 mx-auto rounded-lg shadow-md object-cover"
                                             />
                                             <button
                                                 type="button"
                                                 onClick={clearImage}
-                                                className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 shadow-lg transition-colors"
+                                                className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-lg transition-colors"
                                                 title="Remove image"
                                             >
                                                 <X className="h-4 w-4" />
                                             </button>
                                         </div>
-                                        <div className="flex items-center justify-center space-x-4">
-                                            <div className="flex items-center text-success-700 bg-success-50 px-3 py-2 rounded-lg">
-                                                <CheckCircle className="h-4 w-4 mr-2" />
-                                                <span className="text-sm font-medium">{formData.image?.name}</span>
+                                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                                            <div className="flex items-center text-success-700 bg-success-50 px-3 py-1.5 rounded-lg min-w-0 flex-1">
+                                                <CheckCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+                                                <span className="text-xs font-medium truncate">{formData.image?.name}</span>
                                             </div>
-                                            <label htmlFor="image-upload" className="text-sm text-primary-600 hover:text-primary-700 font-medium cursor-pointer underline">
-                                                Change Image
+                                            <label htmlFor="image-upload" className="text-sm text-primary-600 hover:text-primary-700 font-medium cursor-pointer underline flex-shrink-0">
+                                                Change
                                             </label>
                                         </div>
                                     </div>
