@@ -153,8 +153,8 @@ const ChallengeQueue = () => {
 
                 {/* Filters */}
                 <div className="card mb-6">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div className="relative">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="col-span-2 md:col-span-1 relative">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
                             <input
                                 type="text"
@@ -164,7 +164,6 @@ const ChallengeQueue = () => {
                                 placeholder="Search challenges..."
                             />
                         </div>
-                        
                         <div>
                             <select
                                 className="input-field w-full"
@@ -178,31 +177,61 @@ const ChallengeQueue = () => {
                                 <option value="reviewed">Reviewed</option>
                             </select>
                         </div>
-
                         <div>
                             <input
                                 type="date"
-                                className="input-field w-full"
+                                className="input-field w-full text-sm"
                                 value={filters.dateFrom}
                                 onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
-                                placeholder="From Date"
                             />
                         </div>
-
                         <div>
                             <input
                                 type="date"
-                                className="input-field w-full"
+                                className="input-field w-full text-sm"
                                 value={filters.dateTo}
                                 onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
-                                placeholder="To Date"
                             />
                         </div>
                     </div>
                 </div>
 
-                {/* Challenges Table */}
-                <div className="card overflow-hidden">
+                {/* Mobile card list */}
+                <div className="md:hidden space-y-3">
+                    {filteredChallenges.map(challenge => (
+                        <div key={challenge._id} className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4">
+                            <div className="flex items-start justify-between gap-2 mb-2">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-xs font-mono text-gray-500 bg-gray-100 px-2 py-0.5 rounded">#{challenge._id.slice(-6)}</span>
+                                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getStatusColor(challenge.status)}`}>
+                                        {challenge.status}
+                                    </span>
+                                </div>
+                                <span className={`text-sm font-bold flex-shrink-0 ${challenge.similarityScore > 70 ? 'text-green-600' : challenge.similarityScore > 50 ? 'text-yellow-600' : 'text-red-600'}`}>
+                                    {challenge.similarityScore}%
+                                </span>
+                            </div>
+                            <h3 className="font-bold text-gray-900 text-sm mb-1 line-clamp-1">{challenge.issueId?.title || 'N/A'}</h3>
+                            <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+                                <span>User: <span className="font-medium text-gray-700">{challenge.userId?.name || 'Unknown'}</span></span>
+                                <span>{getChallengeTypeLabel(challenge.challengeType)}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+                                <span>Admin: <span className="font-medium text-gray-700">{challenge.adminId?.name || 'Unknown'}</span></span>
+                                <span>{new Date(challenge.createdAt).toLocaleDateString()}</span>
+                            </div>
+                            <button
+                                onClick={() => handleViewChallenge(challenge)}
+                                className="w-full flex items-center justify-center gap-1.5 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-xs font-semibold transition-colors"
+                            >
+                                Review Challenge
+                            </button>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Desktop table */}
+                <div className="hidden md:block card overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead className="bg-gray-50 border-b">
@@ -221,53 +250,28 @@ const ChallengeQueue = () => {
                             <tbody className="bg-white divide-y divide-gray-200">
                                 {filteredChallenges.map(challenge => (
                                     <tr key={challenge._id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                            #{challenge._id.slice(-6)}
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-900">
-                                            <div className="max-w-xs truncate">
-                                                {challenge.issueId?.title || 'N/A'}
-                                            </div>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#{challenge._id.slice(-6)}</td>
+                                        <td className="px-6 py-4 text-sm text-gray-900"><div className="max-w-xs truncate">{challenge.issueId?.title || 'N/A'}</div></td>
+                                        <td className="px-6 py-4 text-sm text-gray-600">
+                                            <div className="font-medium">{challenge.userId?.name || 'Unknown'}</div>
+                                            <div className="text-xs text-gray-500">{challenge.userId?.email || 'N/A'}</div>
                                         </td>
                                         <td className="px-6 py-4 text-sm text-gray-600">
-                                            <div>
-                                                <div className="font-medium">{challenge.userId?.name || 'Unknown'}</div>
-                                                <div className="text-xs text-gray-500">{challenge.userId?.email || 'N/A'}</div>
-                                            </div>
+                                            <div className="font-medium">{challenge.adminId?.name || 'Unknown'}</div>
+                                            <div className="text-xs text-gray-500">{challenge.adminId?.email || 'N/A'}</div>
                                         </td>
-                                        <td className="px-6 py-4 text-sm text-gray-600">
-                                            <div>
-                                                <div className="font-medium">{challenge.adminId?.name || 'Unknown'}</div>
-                                                <div className="text-xs text-gray-500">{challenge.adminId?.email || 'N/A'}</div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                            {getChallengeTypeLabel(challenge.challengeType)}
-                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{getChallengeTypeLabel(challenge.challengeType)}</td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`text-sm font-semibold ${
-                                                challenge.similarityScore > 70 ? 'text-green-600' :
-                                                challenge.similarityScore > 50 ? 'text-yellow-600' :
-                                                'text-red-600'
-                                            }`}>
+                                            <span className={`text-sm font-semibold ${challenge.similarityScore > 70 ? 'text-green-600' : challenge.similarityScore > 50 ? 'text-yellow-600' : 'text-red-600'}`}>
                                                 {challenge.similarityScore}%
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`text-xs px-2 py-1 rounded ${getStatusColor(challenge.status)}`}>
-                                                {challenge.status}
-                                            </span>
+                                            <span className={`text-xs px-2 py-1 rounded ${getStatusColor(challenge.status)}`}>{challenge.status}</span>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                            {new Date(challenge.createdAt).toLocaleDateString()}
-                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{new Date(challenge.createdAt).toLocaleDateString()}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                            <button
-                                                onClick={() => handleViewChallenge(challenge)}
-                                                className="text-primary-600 hover:text-primary-700 font-medium"
-                                            >
-                                                Review
-                                            </button>
+                                            <button onClick={() => handleViewChallenge(challenge)} className="text-primary-600 hover:text-primary-700 font-medium">Review</button>
                                         </td>
                                     </tr>
                                 ))}
