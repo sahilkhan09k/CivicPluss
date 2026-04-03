@@ -39,6 +39,20 @@ export const analyzeImageSeverityGroq = async (imageUrl) => {
 - detectedObjects: array of 1-3 main objects/issues visible
 - description: brief description of what you see
 - isRelevant: boolean (true if this is a civic infrastructure issue like roads, water, electricity, waste, public facilities; false if it's random/unrelated content)
+- dimensions: object with estimated physical measurements based on issue type:
+  * For potholes: { width: number (in cm), depth: number (in cm), area: number (in sq cm) }
+  * For garbage: { area: number (in sq meters), volume: number (in cubic meters) }
+  * For water leaks: { flowRate: string, affectedArea: number (in sq meters) }
+  * For broken roads: { length: number (in meters), width: number (in meters), area: number (in sq meters) }
+  * For streetlight issues: { height: number (in meters), affectedRadius: number (in meters) }
+  * For drainage: { length: number (in meters), width: number (in meters), depth: number (in meters) }
+  * For other issues: { estimatedSize: string, affectedArea: number (in sq meters) }
+
+Calculate severity based on these dimensions:
+- Potholes: severity increases with width (>30cm = high) and depth (>10cm = high)
+- Garbage: severity increases with area covered (>10 sq m = high)
+- Water leaks: severity based on flow rate and affected area
+- Road damage: severity based on total area affected
 
 Civic issues include: potholes, broken roads, water leaks, garbage, streetlights, drainage, public property damage, etc.
 NOT civic issues: personal photos, memes, random objects, food, animals, selfies, etc.
@@ -65,7 +79,7 @@ Respond ONLY with valid JSON, no other text.`;
             ],
             model: "meta-llama/llama-4-scout-17b-16e-instruct",
             temperature: 0.3,
-            max_tokens: 300,
+            max_tokens: 500,
         });
 
         let responseText = completion.choices[0]?.message?.content || "{}";
@@ -92,8 +106,10 @@ Respond ONLY with valid JSON, no other text.`;
         const severity = Math.min(10, Math.max(1, analysis.severity || 5));
         const confidence = Math.min(1, Math.max(0, analysis.confidence || 0.7));
         const detectedObjects = analysis.detectedObjects || ['infrastructure issue'];
+        const dimensions = analysis.dimensions || {};
 
         console.log(`✅ Groq Vision Analysis: Severity=${severity}/10, Confidence=${Math.round(confidence * 100)}%`);
+        console.log(`📏 Estimated Dimensions:`, dimensions);
 
         return {
             isRelevant: true,
@@ -101,6 +117,7 @@ Respond ONLY with valid JSON, no other text.`;
             confidence,
             detectedObjects,
             description: analysis.description,
+            dimensions,
             source: 'groq-vision'
         };
 
@@ -118,6 +135,9 @@ const fallbackImageAnalysis = () => {
         severity: 5,
         confidence: 0.5,
         detectedObjects: ['unknown'],
+        dimensions: {
+            estimatedSize: 'medium'
+        },
         fallback: true
     };
 };

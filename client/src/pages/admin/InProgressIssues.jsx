@@ -119,7 +119,7 @@ const InProgressIssues = () => {
         return (
             <div className="flex min-h-screen bg-gray-50">
                 <Sidebar isAdmin={true} />
-                <div className="flex-1 ml-64 p-8 flex items-center justify-center">
+                <div className="flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8 flex items-center justify-center">
                     <Loader2 className="h-12 w-12 animate-spin text-primary-600" />
                 </div>
             </div>
@@ -130,7 +130,7 @@ const InProgressIssues = () => {
         return (
             <div className="flex min-h-screen bg-gray-50">
                 <Sidebar isAdmin={true} />
-                <div className="flex-1 ml-64 p-8">
+                <div className="flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8">
                     <div className="card bg-red-50 border-2 border-red-200 text-center py-12">
                         <p className="text-red-700 text-lg">{error}</p>
                     </div>
@@ -143,7 +143,7 @@ const InProgressIssues = () => {
         <div className="flex min-h-screen bg-gray-50">
             <Sidebar isAdmin={true} />
 
-            <div className="flex-1 ml-64 p-8">
+            <div className="flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8">
                 <div className="mb-8">
                     <div className="flex items-center gap-3 mb-2">
                         <Clock className="h-8 w-8 text-blue-600" />
@@ -301,7 +301,7 @@ const InProgressIssues = () => {
                 {/* Resolution Modal */}
                 {showModal && selectedIssue && (
                     <div className="fixed inset-0 bg-gray-900 bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-xl shadow-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="bg-white rounded-xl shadow-2xl p-4 md:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className="text-2xl font-bold text-gray-900">Mark as Resolved</h2>
                                 <span className="bg-gray-100 px-3 py-1 rounded-lg text-sm font-mono text-gray-600">
@@ -417,3 +417,7 @@ const InProgressIssues = () => {
 };
 
 export default InProgressIssues;
+
+
+
+

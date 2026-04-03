@@ -58,6 +58,28 @@ const issueSchema = new Schema({
         timePending: Number,
         aiAdjustment: Number
     },
+    // AI-analyzed dimensions based on issue type
+    dimensions: {
+        // For potholes
+        width: { type: Number }, // in cm
+        depth: { type: Number }, // in cm
+        area: { type: Number }, // in sq cm or sq meters
+        
+        // For garbage/waste
+        volume: { type: Number }, // in cubic meters
+        
+        // For water leaks
+        flowRate: { type: String }, // descriptive (e.g., "heavy", "moderate", "light")
+        affectedArea: { type: Number }, // in sq meters
+        
+        // For road damage
+        length: { type: Number }, // in meters
+        
+        // General fields
+        estimatedSize: { type: String }, // descriptive size
+        height: { type: Number }, // in meters (for streetlights, etc.)
+        affectedRadius: { type: Number } // in meters
+    },
     reportedBy: {
         type: Schema.Types.ObjectId,
         ref: 'User',
@@ -78,6 +100,12 @@ const issueSchema = new Schema({
     },
     resolutionImageUrl: {
         type: String,
+        default: null
+    },
+    resolvedScore: {
+        type: Number,
+        min: 0,
+        max: 100,
         default: null
     },
     resolvedBy: {
@@ -139,12 +167,22 @@ const issueSchema = new Schema({
     trustScorePenaltyApplied: {
         type: Boolean,
         default: false
+    },
+    // Community upvotes
+    upvotes: [{
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+    }],
+    upvoteCount: {
+        type: Number,
+        default: 0
     }
 }, { timestamps: true });
 
 // Create indexes for query performance
 issueSchema.index({ city: 1, status: 1 });
 issueSchema.index({ city: 1, priorityScore: -1 });
+issueSchema.index({ city: 1, upvoteCount: -1 });
 issueSchema.index({ adminDecisionTimestamp: 1 }); // For challenge window validation
 
 export const Issue = mongoose.model('Issue', issueSchema);

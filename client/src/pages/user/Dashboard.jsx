@@ -112,7 +112,7 @@ const Dashboard = () => {
         return (
             <div className="flex min-h-screen bg-gradient-to-br from-gray-50 via-primary-50/30 to-accent-50/20">
                 <Sidebar />
-                <div className="flex-1 ml-64 flex items-center justify-center">
+                <div className="flex-1 md:ml-64 flex items-center justify-center pt-16 md:pt-0">
                     <div className="text-center">
                         <Loader className="h-12 w-12 text-primary-600 animate-spin mx-auto mb-4" />
                         <p className="text-gray-600">Loading dashboard...</p>
@@ -126,7 +126,7 @@ const Dashboard = () => {
         <div className="flex min-h-screen bg-gradient-to-br from-gray-50 via-primary-50/30 to-accent-50/20">
             <Sidebar />
 
-            <div className="flex-1 ml-64 p-8">
+            <div className="flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8">
                 <div className="mb-8">
                     <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent">
                         Dashboard
@@ -323,9 +323,19 @@ const Dashboard = () => {
                                         <span className={`px-2 py-1 rounded-full font-medium ${getPriorityColor(issue.priority)}`}>
                                             {issue.priority}
                                         </span>
-                                        <span className="text-gray-500">
-                                            Score: {issue.priorityScore}
-                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            {(issue.upvoteCount || 0) > 0 && (
+                                                <span className="flex items-center gap-1 text-primary-600 font-semibold">
+                                                    <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                                                    </svg>
+                                                    {issue.upvoteCount}
+                                                </span>
+                                            )}
+                                            <span className="text-gray-500">
+                                                Score: {issue.priorityScore}
+                                            </span>
+                                        </div>
                                     </div>
                                 </Link>
                             ))}
@@ -338,3 +348,8 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
+
+
+
+

@@ -73,16 +73,21 @@ const ManageIssues = () => {
 
         try {
             setUpdating(true);
-            await apiService.updateIssueStatus(
+            const response = await apiService.updateIssueStatus(
                 selectedIssue._id, 
                 newStatus, 
                 resolutionImage, 
                 resolutionConfirmed
             );
 
+            // Show resolved score if available
+            if (response.data.resolvedScore && newStatus === 'Resolved') {
+                alert(`✅ Issue marked as resolved!\n\nAI Verification Score: ${response.data.resolvedScore}%\n\n${response.data.message || 'The AI has verified that the issue appears to be properly resolved.'}`);
+            }
+
             setIssues(issues.map(issue =>
                 issue._id === selectedIssue._id
-                    ? { ...issue, status: newStatus }
+                    ? { ...issue, status: newStatus, resolvedScore: response.data.resolvedScore }
                     : issue
             ));
 
@@ -92,7 +97,13 @@ const ManageIssues = () => {
             setResolutionImagePreview(null);
             setResolutionConfirmed(false);
         } catch (err) {
-            alert(err.message || 'Failed to update issue');
+            // Enhanced error handling for resolution verification failures
+            const errorMessage = err.message || 'Failed to update issue';
+            if (errorMessage.includes('AI analysis indicates') || errorMessage.includes('Score:')) {
+                alert(`❌ Resolution Verification Failed\n\n${errorMessage}\n\nPlease ensure the issue is completely resolved before uploading the photo.`);
+            } else {
+                alert(errorMessage);
+            }
         } finally {
             setUpdating(false);
         }
@@ -159,7 +170,7 @@ const ManageIssues = () => {
                 </div>
 
                 <Sidebar isAdmin={true} />
-                <div className="relative z-10 flex-1 ml-64 p-8 flex items-center justify-center">
+                <div className="relative z-10 flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8 flex items-center justify-center">
                     <div className="text-center">
                         <div className="bg-gradient-to-br from-primary-500 to-accent-500 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl animate-pulse">
                             <Loader2 className="h-10 w-10 text-white animate-spin" />
@@ -182,7 +193,7 @@ const ManageIssues = () => {
                 </div>
 
                 <Sidebar isAdmin={true} />
-                <div className="relative z-10 flex-1 ml-64 p-8">
+                <div className="relative z-10 flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8">
                     <div className="max-w-2xl mx-auto">
                         <div className="card-gradient text-center py-16 border-2 border-red-200 bg-gradient-to-br from-red-50 to-red-100/50">
                             <div className="bg-gradient-to-br from-red-500 to-red-600 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
@@ -207,7 +218,7 @@ const ManageIssues = () => {
 
             <Sidebar isAdmin={true} />
 
-            <div className="relative z-10 flex-1 ml-64 p-8">
+            <div className="relative z-10 flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8">
                 <div className="max-w-7xl mx-auto">
                     <div className="mb-12 animate-fade-in">
                         <div className="flex items-center space-x-4 mb-6">
@@ -343,7 +354,7 @@ const ManageIssues = () => {
                 {/* Update Modal */}
                 {showModal && selectedIssue && (
                     <div className="fixed inset-0 bg-gray-900 bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-xl shadow-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="bg-white rounded-xl shadow-2xl p-4 md:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className="text-2xl font-bold text-gray-900">Update Issue</h2>
                                 <span className="bg-gray-100 px-3 py-1 rounded-lg text-sm font-mono text-gray-600">
@@ -493,3 +504,8 @@ const ManageIssues = () => {
 };
 
 export default ManageIssues;
+
+
+
+
+

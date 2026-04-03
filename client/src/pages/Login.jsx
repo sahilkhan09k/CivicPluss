@@ -71,7 +71,7 @@ const Login = () => {
                 </div>
 
                 {/* Login Card */}
-                <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border border-white/20">
+                <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-4 md:p-8 border border-white/20">
                     {error && (
                         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start space-x-3">
                             <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
@@ -144,3 +144,8 @@ const Login = () => {
 };
 
 export default Login;
+
+
+
+
+

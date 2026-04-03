@@ -9,7 +9,8 @@ import {
     getAdminIssueStats,
     getIssuesByPriority,
     reportIssueAsFake,
-    getHomeStats
+    getHomeStats,
+    toggleUpvote
 } from "../controllers/issue.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 
@@ -30,5 +31,7 @@ router.get("/adminStats", verifyJWT, requireAdmin, getAdminIssueStats);
 router.get("/getIssuesByPriority", verifyJWT, requireAdmin, getIssuesByPriority);
 
 router.put("/reportAsFake/:issueId", verifyJWT, requireAdmin, reportIssueAsFake);
+
+router.put("/upvote/:issueId", verifyJWT, toggleUpvote);
 
 export default router;

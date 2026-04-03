@@ -5,7 +5,28 @@ import cookieParser from 'cookie-parser'
 const app = express();
 
 app.use(cors({
-    origin: [process.env.CORS_ORIGIN, 'https://civic-pluss.vercel.app', 'http://localhost:5173', 'http://localhost:5174'],
+    origin: (origin, callback) => {
+        const allowedOrigins = [
+            process.env.CORS_ORIGIN,
+            'https://civic-pluss.vercel.app',
+            'http://localhost:5173',
+            'http://localhost:5174',
+        ];
+
+        // Allow requests with no origin (mobile apps, curl, Postman, etc.)
+        if (!origin) return callback(null, true);
+
+        // Allow any local network IP on port 5173 or 5174
+        // This covers 192.168.x.x, 10.x.x.x, 172.16-31.x.x
+        const isLocalNetwork = /^http:\/\/(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)\d+\.\d+:(5173|5174)$/.test(origin);
+
+        if (allowedOrigins.includes(origin) || isLocalNetwork) {
+            callback(null, true);
+        } else {
+            console.warn(`CORS blocked origin: ${origin}`);
+            callback(new Error(`CORS blocked: ${origin}`));
+        }
+    },
     credentials: true
 }))
 

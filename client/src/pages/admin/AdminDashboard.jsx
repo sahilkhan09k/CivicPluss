@@ -131,7 +131,7 @@ const AdminDashboard = () => {
                 </div>
 
                 <Sidebar isAdmin={true} />
-                <div className="relative z-10 flex-1 ml-64 p-8 flex items-center justify-center">
+                <div className="relative z-10 flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8 flex items-center justify-center">
                     <div className="text-center">
                         <div className="bg-gradient-to-br from-primary-500 to-accent-500 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl animate-pulse">
                             <Loader2 className="h-10 w-10 text-white animate-spin" />
@@ -154,7 +154,7 @@ const AdminDashboard = () => {
                 </div>
 
                 <Sidebar isAdmin={true} />
-                <div className="relative z-10 flex-1 ml-64 p-8">
+                <div className="relative z-10 flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8">
                     <div className="max-w-2xl mx-auto">
                         <div className="card-gradient text-center py-16 border-2 border-red-200 bg-gradient-to-br from-red-50 to-red-100/50">
                             <div className="bg-gradient-to-br from-red-500 to-red-600 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
@@ -189,7 +189,7 @@ const AdminDashboard = () => {
 
             <Sidebar isAdmin={true} />
 
-            <div className="relative z-10 flex-1 ml-64 p-8">
+            <div className="relative z-10 flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8">
                 <div className="max-w-7xl mx-auto">
                     <div className="mb-12 animate-fade-in">
                         <div className="flex items-center space-x-4 mb-6">
@@ -411,3 +411,8 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
+
+
+
+
+

@@ -44,7 +44,7 @@ const ResolvedIssues = () => {
         return (
             <div className="flex min-h-screen bg-gray-50">
                 <Sidebar isAdmin={true} />
-                <div className="flex-1 ml-64 p-8 flex items-center justify-center">
+                <div className="flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8 flex items-center justify-center">
                     <Loader2 className="h-12 w-12 animate-spin text-primary-600" />
                 </div>
             </div>
@@ -55,7 +55,7 @@ const ResolvedIssues = () => {
         return (
             <div className="flex min-h-screen bg-gray-50">
                 <Sidebar isAdmin={true} />
-                <div className="flex-1 ml-64 p-8">
+                <div className="flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8">
                     <div className="card bg-red-50 border-2 border-red-200 text-center py-12">
                         <p className="text-red-700 text-lg">{error}</p>
                     </div>
@@ -68,7 +68,7 @@ const ResolvedIssues = () => {
         <div className="flex min-h-screen bg-gray-50">
             <Sidebar isAdmin={true} />
 
-            <div className="flex-1 ml-64 p-8">
+            <div className="flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8">
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold mb-2">
                         {user?.role === 'super_admin' ? 'All Resolved Issues' : 'Resolved Issues'}
@@ -143,6 +143,7 @@ const ResolvedIssues = () => {
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">City</th>
                                     )}
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">AI Score</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Resolved Date</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                 </tr>
@@ -179,6 +180,31 @@ const ResolvedIssues = () => {
                                                 {issue.priority}
                                             </span>
                                         </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            {issue.resolvedScore ? (
+                                                <div className="flex items-center space-x-2">
+                                                    <div className="w-12 bg-gray-200 rounded-full h-2">
+                                                        <div 
+                                                            className={`h-2 rounded-full ${
+                                                                issue.resolvedScore >= 80 ? 'bg-green-500' :
+                                                                issue.resolvedScore >= 60 ? 'bg-yellow-500' :
+                                                                'bg-red-500'
+                                                            }`}
+                                                            style={{ width: `${issue.resolvedScore}%` }}
+                                                        ></div>
+                                                    </div>
+                                                    <span className={`text-xs font-semibold ${
+                                                        issue.resolvedScore >= 80 ? 'text-green-600' :
+                                                        issue.resolvedScore >= 60 ? 'text-yellow-600' :
+                                                        'text-red-600'
+                                                    }`}>
+                                                        {issue.resolvedScore}%
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <span className="text-xs text-gray-400">N/A</span>
+                                            )}
+                                        </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                             {issue.resolvedAt ? new Date(issue.resolvedAt).toLocaleDateString() : 'N/A'}
                                         </td>
@@ -210,7 +236,7 @@ const ResolvedIssues = () => {
 
                 {showModal && selectedIssue && (
                     <div className="fixed inset-0 bg-gray-900 bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-lg p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="bg-white rounded-lg p-4 md:p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className="text-2xl font-bold">Issue Details #{selectedIssue._id.slice(-6)}</h2>
                                 <span className="text-xs px-3 py-1 rounded-full bg-green-100 text-green-700 flex items-center">
@@ -267,6 +293,43 @@ const ResolvedIssues = () => {
                                     </div>
                                 )}
 
+                                {selectedIssue.resolvedScore && (
+                                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                            <svg className="h-4 w-4 mr-1 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            AI Resolution Verification Score
+                                        </label>
+                                        <div className="flex items-center space-x-3">
+                                            <div className="flex-1">
+                                                <div className="bg-gray-200 rounded-full h-3">
+                                                    <div 
+                                                        className={`h-3 rounded-full transition-all duration-500 ${
+                                                            selectedIssue.resolvedScore >= 80 ? 'bg-green-500' :
+                                                            selectedIssue.resolvedScore >= 60 ? 'bg-yellow-500' :
+                                                            'bg-red-500'
+                                                        }`}
+                                                        style={{ width: `${selectedIssue.resolvedScore}%` }}
+                                                    ></div>
+                                                </div>
+                                            </div>
+                                            <span className={`text-2xl font-bold ${
+                                                selectedIssue.resolvedScore >= 80 ? 'text-green-600' :
+                                                selectedIssue.resolvedScore >= 60 ? 'text-yellow-600' :
+                                                'text-red-600'
+                                            }`}>
+                                                {selectedIssue.resolvedScore}%
+                                            </span>
+                                        </div>
+                                        <p className="text-sm text-gray-600 mt-2">
+                                            {selectedIssue.resolvedScore >= 80 ? '✅ Excellent resolution verified by AI' :
+                                             selectedIssue.resolvedScore >= 60 ? '✅ Good resolution verified by AI' :
+                                             '⚠️ Resolution needs improvement'}
+                                        </p>
+                                    </div>
+                                )}
+
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
@@ -305,3 +368,8 @@ const ResolvedIssues = () => {
 };
 
 export default ResolvedIssues;
+
+
+
+
+

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Loader, AlertCircle, MapPin, Calendar, TrendingUp, ArrowLeft, User, CheckCircle, XCircle } from 'lucide-react';
+import { Loader, AlertCircle, MapPin, Calendar, TrendingUp, ArrowLeft, User, CheckCircle, XCircle, ArrowUp, ThumbsUp } from 'lucide-react';
 import Sidebar from '../../components/Sidebar';
 import { apiService } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -16,6 +16,7 @@ const IssueDetail = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [isChallengeModalOpen, setIsChallengeModalOpen] = useState(false);
+    const [upvoting, setUpvoting] = useState(false);
 
     useEffect(() => {
         fetchIssueDetail();
@@ -110,6 +111,25 @@ const IssueDetail = () => {
         setIsChallengeModalOpen(true);
     };
 
+    const handleUpvote = async () => {
+        if (upvoting || !issue) return;
+        // Cannot upvote own issue
+        if (issue.reportedBy?._id === user?._id || issue.reportedBy === user?._id) return;
+        setUpvoting(true);
+        try {
+            const res = await apiService.toggleUpvote(issue._id);
+            setIssue(prev => ({
+                ...prev,
+                upvoteCount: res.data.upvoteCount,
+                userUpvoted: res.data.upvoted
+            }));
+        } catch (err) {
+            console.error('Upvote error:', err);
+        } finally {
+            setUpvoting(false);
+        }
+    };
+
     const handleChallengeModalClose = () => {
         setIsChallengeModalOpen(false);
         // Refresh issue data to show updated challenge status
@@ -202,7 +222,7 @@ const IssueDetail = () => {
                 </div>
 
                 <Sidebar />
-                <div className="relative z-10 flex-1 ml-64 flex items-center justify-center">
+                <div className="relative z-10 flex-1 md:ml-64 flex items-center justify-center pt-16 md:pt-0">
                     <div className="text-center">
                         <div className="bg-gradient-to-br from-primary-500 to-accent-500 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl animate-pulse">
                             <Loader className="h-10 w-10 text-white animate-spin" />
@@ -225,7 +245,7 @@ const IssueDetail = () => {
                 </div>
 
                 <Sidebar />
-                <div className="relative z-10 flex-1 ml-64 flex items-center justify-center">
+                <div className="relative z-10 flex-1 md:ml-64 flex items-center justify-center pt-16 md:pt-0">
                     <div className="text-center">
                         <div className="bg-gradient-to-br from-red-500 to-red-600 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
                             <AlertCircle className="h-10 w-10 text-white" />
@@ -251,7 +271,7 @@ const IssueDetail = () => {
 
             <Sidebar />
 
-            <div className="relative z-10 flex-1 ml-64 p-8">
+            <div className="relative z-10 flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8">
                 <button
                     onClick={() => navigate(-1)}
                     className="mb-8 flex items-center text-gray-600 hover:text-primary-600 transition-all duration-300 transform hover:scale-105 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-xl shadow-lg hover:shadow-xl"
@@ -305,6 +325,58 @@ const IssueDetail = () => {
                                 </div>
                             )}
                         </div>
+
+                        {/* Upvote Section */}
+                        {!isIssueOwner && (
+                            <div className="mt-5 pt-5 border-t border-gray-100 flex items-center gap-4">
+                                <button
+                                    onClick={handleUpvote}
+                                    disabled={upvoting}
+                                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 transform hover:scale-105 active:scale-95 ${
+                                        issue.userUpvoted ||
+                                        issue.upvotes?.some(id => id === user?._id || id?._id === user?._id)
+                                            ? 'bg-primary-600 text-white shadow-lg shadow-primary-200'
+                                            : 'bg-gray-100 text-gray-600 hover:bg-primary-50 hover:text-primary-700 border-2 border-gray-200 hover:border-primary-300'
+                                    } ${upvoting ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                >
+                                    {upvoting ? (
+                                        <Loader className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <ArrowUp className="h-4 w-4" />
+                                    )}
+                                    {issue.userUpvoted ||
+                                     issue.upvotes?.some(id => id === user?._id || id?._id === user?._id)
+                                        ? 'Upvoted'
+                                        : 'Upvote this Issue'}
+                                </button>
+                                <div className="flex items-center gap-2 text-gray-600">
+                                    <ThumbsUp className="h-4 w-4 text-primary-500" />
+                                    <span className="font-bold text-lg text-primary-600">
+                                        {issue.upvoteCount || 0}
+                                    </span>
+                                    <span className="text-sm">
+                                        {(issue.upvoteCount || 0) === 1 ? 'community vote' : 'community votes'}
+                                    </span>
+                                    {(issue.upvoteCount || 0) >= 5 && (
+                                        <span className="ml-1 text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-700 font-semibold">
+                                            🔥 Trending
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                        {isIssueOwner && (
+                            <div className="mt-5 pt-5 border-t border-gray-100 flex items-center gap-2 text-gray-600">
+                                <ThumbsUp className="h-4 w-4 text-primary-500" />
+                                <span className="font-bold text-lg text-primary-600">{issue.upvoteCount || 0}</span>
+                                <span className="text-sm">community {(issue.upvoteCount || 0) === 1 ? 'vote' : 'votes'} on your issue</span>
+                                {(issue.upvoteCount || 0) >= 5 && (
+                                    <span className="ml-1 text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-700 font-semibold">
+                                        🔥 Trending
+                                    </span>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {/* Challenge Button - Show only for issue owner with admin decision and challenge not resolved */}
@@ -401,6 +473,133 @@ const IssueDetail = () => {
                             </div>
                         </div>
                     )}
+
+                    {/* AI Dimensions Analysis */}
+                    {issue.dimensions && Object.keys(issue.dimensions).length > 0 && (
+                        <div className="card-gradient">
+                            <h2 className="text-xl font-bold text-gray-900 mb-4">📏 AI Dimensions Analysis</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {/* Pothole dimensions */}
+                                {issue.dimensions.width && (
+                                    <div className="bg-white p-4 rounded-xl border border-gray-200">
+                                        <p className="text-sm text-gray-600 mb-1">Width</p>
+                                        <p className="text-2xl font-bold text-orange-600">
+                                            {issue.dimensions.width} cm
+                                        </p>
+                                    </div>
+                                )}
+                                {issue.dimensions.depth && (
+                                    <div className="bg-white p-4 rounded-xl border border-gray-200">
+                                        <p className="text-sm text-gray-600 mb-1">Depth</p>
+                                        <p className="text-2xl font-bold text-red-600">
+                                            {issue.dimensions.depth} cm
+                                        </p>
+                                    </div>
+                                )}
+                                
+                                {/* Area (for various issue types) */}
+                                {issue.dimensions.area && (
+                                    <div className="bg-white p-4 rounded-xl border border-gray-200">
+                                        <p className="text-sm text-gray-600 mb-1">
+                                            {issue.category === 'Road' ? 'Affected Area' : 'Area Covered'}
+                                        </p>
+                                        <p className="text-2xl font-bold text-blue-600">
+                                            {issue.dimensions.area} {issue.dimensions.area > 100 ? 'sq m' : 'sq cm'}
+                                        </p>
+                                    </div>
+                                )}
+                                
+                                {/* Volume (for garbage) */}
+                                {issue.dimensions.volume && (
+                                    <div className="bg-white p-4 rounded-xl border border-gray-200">
+                                        <p className="text-sm text-gray-600 mb-1">Volume</p>
+                                        <p className="text-2xl font-bold text-green-600">
+                                            {issue.dimensions.volume} m³
+                                        </p>
+                                    </div>
+                                )}
+                                
+                                {/* Length (for road damage) */}
+                                {issue.dimensions.length && (
+                                    <div className="bg-white p-4 rounded-xl border border-gray-200">
+                                        <p className="text-sm text-gray-600 mb-1">Length</p>
+                                        <p className="text-2xl font-bold text-purple-600">
+                                            {issue.dimensions.length} m
+                                        </p>
+                                    </div>
+                                )}
+                                
+                                {/* Flow Rate (for water leaks) */}
+                                {issue.dimensions.flowRate && (
+                                    <div className="bg-white p-4 rounded-xl border border-gray-200">
+                                        <p className="text-sm text-gray-600 mb-1">Flow Rate</p>
+                                        <p className="text-lg font-bold text-cyan-600 capitalize">
+                                            {issue.dimensions.flowRate}
+                                        </p>
+                                    </div>
+                                )}
+                                
+                                {/* Affected Area (for water leaks, etc.) */}
+                                {issue.dimensions.affectedArea && (
+                                    <div className="bg-white p-4 rounded-xl border border-gray-200">
+                                        <p className="text-sm text-gray-600 mb-1">Affected Area</p>
+                                        <p className="text-2xl font-bold text-indigo-600">
+                                            {issue.dimensions.affectedArea} sq m
+                                        </p>
+                                    </div>
+                                )}
+                                
+                                {/* Height (for streetlights, etc.) */}
+                                {issue.dimensions.height && (
+                                    <div className="bg-white p-4 rounded-xl border border-gray-200">
+                                        <p className="text-sm text-gray-600 mb-1">Height</p>
+                                        <p className="text-2xl font-bold text-yellow-600">
+                                            {issue.dimensions.height} m
+                                        </p>
+                                    </div>
+                                )}
+                                
+                                {/* Affected Radius */}
+                                {issue.dimensions.affectedRadius && (
+                                    <div className="bg-white p-4 rounded-xl border border-gray-200">
+                                        <p className="text-sm text-gray-600 mb-1">Affected Radius</p>
+                                        <p className="text-2xl font-bold text-pink-600">
+                                            {issue.dimensions.affectedRadius} m
+                                        </p>
+                                    </div>
+                                )}
+                                
+                                {/* Estimated Size (fallback) */}
+                                {issue.dimensions.estimatedSize && (
+                                    <div className="bg-white p-4 rounded-xl border border-gray-200">
+                                        <p className="text-sm text-gray-600 mb-1">Estimated Size</p>
+                                        <p className="text-lg font-bold text-gray-600 capitalize">
+                                            {issue.dimensions.estimatedSize}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                            
+                            {/* Severity explanation based on dimensions */}
+                            <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+                                <p className="text-sm text-blue-800">
+                                    <span className="font-semibold">💡 AI Analysis:</span> 
+                                    {issue.category === 'Road' && issue.dimensions.width && issue.dimensions.depth && 
+                                        ` This pothole is ${issue.dimensions.width > 30 ? 'large' : 'small'} (${issue.dimensions.width}cm wide) and ${issue.dimensions.depth > 10 ? 'deep' : 'shallow'} (${issue.dimensions.depth}cm deep), contributing to its ${issue.priority.toLowerCase()} priority rating.`
+                                    }
+                                    {issue.category === 'Waste' && issue.dimensions.area && 
+                                        ` This garbage covers ${issue.dimensions.area} ${issue.dimensions.area > 100 ? 'square meters' : 'square cm'}, ${issue.dimensions.area > 10 ? 'requiring immediate attention' : 'manageable with regular cleanup'}.`
+                                    }
+                                    {issue.category === 'Water' && issue.dimensions.flowRate && 
+                                        ` This water leak has ${issue.dimensions.flowRate} flow rate${issue.dimensions.affectedArea ? ` affecting ${issue.dimensions.affectedArea} sq m` : ''}.`
+                                    }
+                                    {!issue.category.match(/Road|Waste|Water/) && issue.dimensions.estimatedSize &&
+                                        ` This ${issue.category.toLowerCase()} issue is estimated to be ${issue.dimensions.estimatedSize} in size.`
+                                    }
+                                </p>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Challenge Modal */}
@@ -415,3 +614,8 @@ const IssueDetail = () => {
 };
 
 export default IssueDetail;
+
+
+
+
+

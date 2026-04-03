@@ -66,7 +66,7 @@ const Analytics = () => {
         return (
             <div className="flex min-h-screen bg-gray-50">
                 <Sidebar isAdmin={true} />
-                <div className="flex-1 ml-64 p-8 flex items-center justify-center">
+                <div className="flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8 flex items-center justify-center">
                     <Loader2 className="h-12 w-12 animate-spin text-primary-600" />
                 </div>
             </div>
@@ -77,7 +77,7 @@ const Analytics = () => {
         return (
             <div className="flex min-h-screen bg-gray-50">
                 <Sidebar isAdmin={true} />
-                <div className="flex-1 ml-64 p-8">
+                <div className="flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8">
                     <div className="card bg-red-50 border-2 border-red-200 text-center py-12">
                         <p className="text-red-700 text-lg">{error}</p>
                     </div>
@@ -94,7 +94,7 @@ const Analytics = () => {
         <div className="flex min-h-screen bg-gray-50">
             <Sidebar isAdmin={true} />
 
-            <div className="flex-1 ml-64 p-8">
+            <div className="flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8">
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold mb-2">
                         {user?.role === 'super_admin' ? 'State Analytics & Reports' : 'Analytics & Reports'}
@@ -204,3 +204,8 @@ const Analytics = () => {
 };
 
 export default Analytics;
+
+
+
+
+

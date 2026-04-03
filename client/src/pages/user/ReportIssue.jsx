@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Upload, MapPin, CheckCircle, AlertCircle, Loader, Clock, AlertTriangle, X } from 'lucide-react';
+import { Upload, MapPin, CheckCircle, AlertCircle, Loader, AlertTriangle, X } from 'lucide-react';
 import Sidebar from '../../components/Sidebar';
 import { useNavigate } from 'react-router-dom';
 import { apiService } from '../../services/api';
@@ -111,15 +111,16 @@ const ReportIssue = () => {
 
 
             if (err.status === 429 || errorMessage.includes('429') || errorMessage.includes('Too Many Requests')) {
-                if (errorMessage.includes('wait') && errorMessage.includes('minutes')) {
-                    setErrorType('cooldown');
-                    setError(errorMessage);
-                } else if (errorMessage.includes('Daily issue limit')) {
+                if (errorMessage.includes('Daily issue limit')) {
                     setErrorType('limit');
                     setError(errorMessage);
-                } else {
+                } else if (errorMessage.includes('Please wait') && errorMessage.includes('minutes')) {
+                    // Cooldown error
                     setErrorType('cooldown');
-                    setError('You can submit only one issue per 30 minutes. Please wait before submitting another report.');
+                    setError(errorMessage);
+                } else {
+                    setErrorType('general');
+                    setError('Request failed. Please try again.');
                 }
             }
 
@@ -150,7 +151,7 @@ const ReportIssue = () => {
         return (
             <div className="flex min-h-screen bg-gradient-to-br from-gray-50 via-primary-50/30 to-accent-50/20">
                 <Sidebar />
-                <div className="flex-1 ml-64 flex items-center justify-center">
+                <div className="flex-1 md:ml-64 flex items-center justify-center pt-16 md:pt-0">
                     <div className="text-center">
                         <div className="bg-gradient-to-br from-success-500 to-success-600 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
                             <CheckCircle className="h-12 w-12 text-white" />
@@ -168,7 +169,7 @@ const ReportIssue = () => {
         <div className="flex min-h-screen bg-gradient-to-br from-gray-50 via-primary-50/30 to-accent-50/20">
             <Sidebar />
 
-            <div className="flex-1 ml-64 p-8">
+            <div className="flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8">
                 <div className="max-w-3xl mx-auto">
                     <div className="mb-8">
                         <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent">
@@ -178,50 +179,53 @@ const ReportIssue = () => {
                     </div>
 
                     {error && (
-                        <div className={`mb-6 p-5 rounded-xl border-2 ${errorType === 'cooldown' ? 'bg-amber-50 border-amber-300' :
+                        <div className={`mb-6 p-5 rounded-xl border-2 ${
                             errorType === 'limit' ? 'bg-orange-50 border-orange-300' :
                                 errorType === 'location' ? 'bg-blue-50 border-blue-300' :
-                                    'bg-red-50 border-red-300'
+                                    errorType === 'cooldown' ? 'bg-yellow-50 border-yellow-300' :
+                                        'bg-red-50 border-red-300'
                             }`}>
                             <div className="flex items-start space-x-3">
-                                {errorType === 'cooldown' && (
-                                    <Clock className="h-6 w-6 text-amber-600 flex-shrink-0 mt-0.5" />
-                                )}
                                 {errorType === 'limit' && (
                                     <AlertTriangle className="h-6 w-6 text-orange-600 flex-shrink-0 mt-0.5" />
                                 )}
                                 {errorType === 'location' && (
                                     <MapPin className="h-6 w-6 text-blue-600 flex-shrink-0 mt-0.5" />
                                 )}
+                                {errorType === 'cooldown' && (
+                                    <AlertCircle className="h-6 w-6 text-yellow-600 flex-shrink-0 mt-0.5" />
+                                )}
                                 {errorType === 'general' && (
                                     <AlertCircle className="h-6 w-6 text-red-600 flex-shrink-0 mt-0.5" />
                                 )}
                                 <div className="flex-1">
-                                    <h3 className={`font-semibold mb-1 ${errorType === 'cooldown' ? 'text-amber-900' :
+                                    <h3 className={`font-semibold mb-1 ${
                                         errorType === 'limit' ? 'text-orange-900' :
                                             errorType === 'location' ? 'text-blue-900' :
-                                                'text-red-900'
+                                                errorType === 'cooldown' ? 'text-yellow-900' :
+                                                    'text-red-900'
                                         }`}>
-                                        {errorType === 'cooldown' && 'Cooldown Period Active'}
                                         {errorType === 'limit' && 'Daily Limit Reached'}
                                         {errorType === 'location' && 'Location Already Covered'}
+                                        {errorType === 'cooldown' && 'Please Wait'}
                                         {errorType === 'general' && 'Submission Failed'}
                                     </h3>
-                                    <p className={`text-sm ${errorType === 'cooldown' ? 'text-amber-800' :
+                                    <p className={`text-sm ${
                                         errorType === 'limit' ? 'text-orange-800' :
                                             errorType === 'location' ? 'text-blue-800' :
-                                                'text-red-800'
+                                                errorType === 'cooldown' ? 'text-yellow-800' :
+                                                    'text-red-800'
                                         }`}>
                                         {error}
                                     </p>
-                                    {errorType === 'cooldown' && (
-                                        <p className="text-xs text-amber-700 mt-2">
-                                            💡 This helps prevent spam and ensures quality reports
-                                        </p>
-                                    )}
                                     {errorType === 'limit' && (
                                         <p className="text-xs text-orange-700 mt-2">
-                                            💡 You can report up to 5 issues per day. Try again tomorrow!
+                                            💡 You can report up to 20 issues per day. Try again tomorrow!
+                                        </p>
+                                    )}
+                                    {errorType === 'cooldown' && (
+                                        <p className="text-xs text-yellow-700 mt-2">
+                                            ⏰ This helps prevent spam and ensures quality reports. Please wait before submitting another issue.
                                         </p>
                                     )}
                                     {errorType === 'location' && (
@@ -246,7 +250,7 @@ const ReportIssue = () => {
                         {/* Image Upload */}
                         <div className="card-gradient">
                             <label className="block text-sm font-semibold text-gray-700 mb-3">Upload Image *</label>
-                            <div className="border-2 border-dashed border-primary-300 rounded-xl p-8 text-center hover:border-primary-500 hover:bg-primary-50/50 transition cursor-pointer">
+                            <div className="border-2 border-dashed border-primary-300 rounded-xl p-4 md:p-8 text-center hover:border-primary-500 hover:bg-primary-50/50 transition cursor-pointer">
                                 <input
                                     type="file"
                                     accept="image/*"
@@ -418,3 +422,8 @@ const ReportIssue = () => {
 };
 
 export default ReportIssue;
+
+
+
+
+

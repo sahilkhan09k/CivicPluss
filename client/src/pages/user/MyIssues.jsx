@@ -129,7 +129,7 @@ const MyIssues = () => {
                 </div>
 
                 <Sidebar />
-                <div className="relative z-10 flex-1 ml-64 flex items-center justify-center">
+                <div className="relative z-10 flex-1 md:ml-64 flex items-center justify-center pt-16 md:pt-0">
                     <div className="text-center">
                         <div className="bg-gradient-to-br from-primary-500 to-accent-500 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl animate-pulse">
                             <Loader className="h-10 w-10 text-white animate-spin" />
@@ -152,7 +152,7 @@ const MyIssues = () => {
 
             <Sidebar />
 
-            <div className="relative z-10 flex-1 ml-64 p-8">
+            <div className="relative z-10 flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8">
                 <div className="max-w-7xl mx-auto">
                     <div className="mb-12 animate-fade-in">
                         <div className="flex items-center space-x-4 mb-6">
@@ -278,6 +278,15 @@ const MyIssues = () => {
                                                             <TrendingUp className="h-4 w-4 mr-2 text-primary-500" />
                                                             <span className="font-medium">Score: {issue.priorityScore}</span>
                                                         </div>
+                                                        {(issue.upvoteCount || 0) > 0 && (
+                                                            <div className="flex items-center bg-primary-50 px-3 py-2 rounded-xl border border-primary-100">
+                                                                <svg className="h-4 w-4 mr-1 text-primary-500" fill="currentColor" viewBox="0 0 20 20">
+                                                                    <path fillRule="evenodd" d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                                                                </svg>
+                                                                <span className="font-bold text-primary-600">{issue.upvoteCount}</span>
+                                                                <span className="ml-1 text-primary-500 text-xs">votes</span>
+                                                            </div>
+                                                        )}
                                                     </div>
 
                                                     {/* Challenge Status or Challenge Notice */}
@@ -367,3 +376,8 @@ const MyIssues = () => {
 };
 
 export default MyIssues;
+
+
+
+
+

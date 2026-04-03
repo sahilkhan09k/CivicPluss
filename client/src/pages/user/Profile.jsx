@@ -110,7 +110,7 @@ const Profile = () => {
         <div className="flex min-h-screen bg-gradient-to-br from-gray-50 via-primary-50/30 to-accent-50/20">
             <Sidebar />
 
-            <div className="flex-1 ml-64 p-8">
+            <div className="flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8">
                 <div className="max-w-4xl mx-auto">
                     <div className="mb-8">
                         <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent">
@@ -288,7 +288,7 @@ const Profile = () => {
                             </span>
                         </div>
 
-                        <div className={`bg-gradient-to-r ${getTrustScoreColor(trustScore)} p-8 rounded-2xl text-white text-center mb-6`}>
+                        <div className={`bg-gradient-to-r ${getTrustScoreColor(trustScore)} p-4 md:p-8 rounded-2xl text-white text-center mb-6`}>
                             <p className="text-lg mb-2 opacity-90">Your Trust Score</p>
                             <p className="text-7xl font-bold mb-2">{trustScore}</p>
                             <p className="text-sm opacity-75">out of 100</p>
@@ -377,7 +377,7 @@ const Profile = () => {
                     {/* Impact Score */}
                     <div className="card-gradient">
                         <h2 className="text-2xl font-bold text-gray-900 mb-6">Civic Impact Score</h2>
-                        <div className="bg-gradient-to-r from-primary-500 to-accent-500 p-8 rounded-2xl text-white text-center">
+                        <div className="bg-gradient-to-r from-primary-500 to-accent-500 p-4 md:p-8 rounded-2xl text-white text-center">
                             <p className="text-lg mb-2">Your Total Impact</p>
                             <p className="text-6xl font-bold mb-4">{impactScore}</p>
                             <p className="text-primary-100">
@@ -402,3 +402,8 @@ const Profile = () => {
 };
 
 export default Profile;
+
+
+
+
+

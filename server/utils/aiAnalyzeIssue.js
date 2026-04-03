@@ -39,7 +39,7 @@ export const aiAnalyzeIssueHybrid = async (text, imageUrl) => {
         const textSeverity = textAnalysis.severity || 5;
         
         const combinedSeverity = Math.round(
-            (imageSeverity * 0.6) + (textSeverity * 0.4)
+            (imageSeverity * 0.8) + (textSeverity * 0.4)
         );
 
         // Combine urgency boosts

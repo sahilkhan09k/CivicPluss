@@ -81,24 +81,47 @@ class NotificationService {
     async notifyIssueStatusChanged(issueData) {
         const { issue, oldStatus, newStatus, updatedBy } = issueData;
         
-        const statusMessages = {
-            'In Progress': 'Your issue is now being worked on by our team.',
-            'Resolved': 'Great news! Your issue has been resolved.',
-            'Pending': 'Your issue is back to pending status.'
-        };
+        let title, message, priority = 'medium';
+        
+        if (newStatus === 'Resolved') {
+            title = '✅ Issue Resolved Successfully';
+            message = `Great news! Your issue "${issue.title}" has been resolved by our team. ` +
+                     `If you believe the issue is not properly resolved, you can file a challenge within 24 hours. ` +
+                     `View the resolution photo and details in your dashboard.`;
+            priority = 'high';
+        } else if (newStatus === 'In Progress') {
+            title = '🔧 Issue In Progress';
+            message = `Your issue "${issue.title}" is now being worked on by our team. We'll notify you once it's resolved.`;
+            priority = 'medium';
+        } else if (newStatus === 'Pending') {
+            title = '⏳ Issue Status Updated';
+            message = `Your issue "${issue.title}" is back to pending status. Our team will review it soon.`;
+            priority = 'medium';
+        } else {
+            // Fallback for any other status
+            title = 'Issue Status Updated';
+            message = `Your issue "${issue.title}" status changed from ${oldStatus} to ${newStatus}.`;
+            priority = 'medium';
+        }
         
         return await this.createAndSend({
             recipient: issue.reportedBy,
             sender: updatedBy,
             type: 'issue_status_changed',
-            title: `Issue Status Updated`,
-            message: statusMessages[newStatus] || `Your issue status changed from ${oldStatus} to ${newStatus}`,
+            title,
+            message,
             data: {
                 issueId: issue._id,
                 oldValue: oldStatus,
                 newValue: newStatus,
                 actionUrl: `/user/issue/${issue._id}`,
-                priority: newStatus === 'Resolved' ? 'high' : 'medium'
+                priority,
+                // Add challenge-related data for resolved issues
+                ...(newStatus === 'Resolved' && {
+                    challengeDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
+                    canChallenge: true,
+                    resolvedScore: issue.resolvedScore || null
+                })
             }
         });
     }
@@ -111,12 +134,17 @@ class NotificationService {
             recipient: issue.reportedBy,
             sender: reportedBy,
             type: 'issue_reported_spam',
-            title: 'Issue Marked as Spam',
-            message: `Your issue "${issue.title}" has been marked as spam. You have 24 hours to challenge this decision.`,
+            title: '⚠️ Issue Marked as Spam/Fake',
+            message: `Your issue "${issue.title}" has been marked as spam or fake by an admin. ` +
+                    `If you believe this decision is incorrect, you have 24 hours to file a challenge. ` +
+                    `Failure to challenge within 24 hours will result in a trust score penalty.`,
             data: {
                 issueId: issue._id,
                 actionUrl: `/user/issue/${issue._id}`,
-                priority: 'urgent'
+                priority: 'urgent',
+                challengeDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
+                canChallenge: true,
+                penaltyWarning: true
             }
         });
     }

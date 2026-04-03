@@ -120,7 +120,7 @@ const ChallengeQueue = () => {
         return (
             <div className="flex min-h-screen bg-gray-50">
                 <Sidebar isAdmin={true} />
-                <div className="flex-1 ml-64 p-8 flex items-center justify-center">
+                <div className="flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8 flex items-center justify-center">
                     <Loader2 className="h-12 w-12 animate-spin text-primary-600" />
                 </div>
             </div>
@@ -131,7 +131,7 @@ const ChallengeQueue = () => {
         return (
             <div className="flex min-h-screen bg-gray-50">
                 <Sidebar isAdmin={true} />
-                <div className="flex-1 ml-64 p-8">
+                <div className="flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8">
                     <div className="card bg-red-50 border-2 border-red-200 text-center py-12">
                         <AlertTriangle className="h-12 w-12 text-red-600 mx-auto mb-4" />
                         <p className="text-red-700 text-lg">{error}</p>
@@ -145,7 +145,7 @@ const ChallengeQueue = () => {
         <div className="flex min-h-screen bg-gray-50">
             <Sidebar isAdmin={true} />
 
-            <div className="flex-1 ml-64 p-8">
+            <div className="flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8">
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold mb-2">Challenge Queue</h1>
                     <p className="text-gray-600">Review user challenges to admin decisions</p>
@@ -289,7 +289,7 @@ const ChallengeQueue = () => {
                 {/* Review Modal */}
                 {showModal && selectedChallenge && (
                     <div className="fixed inset-0 bg-gray-900 bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-lg p-8 max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="bg-white rounded-lg p-4 md:p-8 max-w-6xl w-full max-h-[90vh] overflow-y-auto">
                             <h2 className="text-2xl font-bold mb-6">Review Challenge #{selectedChallenge._id.slice(-6)}</h2>
 
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -465,7 +465,7 @@ const ChallengeQueue = () => {
                 {/* Enhanced Success Modal */}
                 {showSuccessModal && reviewResult && (
                     <div className="fixed inset-0 bg-gray-900 bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-lg p-8 max-w-2xl w-full">
+                        <div className="bg-white rounded-lg p-4 md:p-8 max-w-2xl w-full">
                             <div className="text-center">
                                 {/* Success Icon */}
                                 <div className={`mx-auto flex items-center justify-center h-16 w-16 rounded-full mb-6 ${
@@ -571,3 +571,8 @@ const ChallengeQueue = () => {
 };
 
 export default ChallengeQueue;
+
+
+
+
+

@@ -7,8 +7,8 @@ import { apiError } from "../utils/apiError.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { aiAnalyzeIssue, aiAnalyzeIssueHybrid } from "../utils/aiAnalyzeIssue.js";
 import { analyzeImageSeverity } from "../utils/aiAnalyzeImage.js";
+import { comparePhotos, compareResolutionPhotos } from "../utils/photoComparator.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
-
 import { validateIssueContent } from "../utils/spamDetection.js";
 
 // Helper function to get city filter based on user role
@@ -29,6 +29,21 @@ const getPriorityLabel = (score) => {
     return "Low";
 };
 
+/**
+ * Priority Score Formula (Research-backed weights):
+ *
+ * Severity      → 40%  : AI-assessed physical severity of the issue
+ * Location      → 35%  : Proximity to critical infrastructure (hospital, school, etc.)
+ * Time Pending  → 20%  : How long the issue has been unresolved (aging multiplier)
+ * Frequency     → 5%   : Nearby duplicate reports (already capped by location dedup)
+ *
+ * Rationale:
+ * - ITIL/ServiceNow: Impact × Urgency drives priority; location IS impact for civic issues
+ * - SeeClickFix research (ACM): Urgency/time-sensitivity is a strong predictor
+ * - Civic studies: Location near critical infrastructure is a public safety multiplier
+ * - Time-pending raised: aging issues compound risk (3-day pothole > new pothole)
+ * - Frequency lowered: nearby duplicates already filtered by 50m dedup radius
+ */
 const calculateBaseScore = ({
     severity,
     frequency,
@@ -36,19 +51,105 @@ const calculateBaseScore = ({
     timePending
 }) => {
     return Math.round(
-        severity * 0.50 +
-        locationImpact * 0.30 +
-        frequency * 0.10 +
-        timePending * 0.10
+        severity      * 0.40 +
+        locationImpact * 0.35 +
+        timePending   * 0.20 +
+        frequency     * 0.05
     );
 };
 
-const getLocationImpact = (text = "") => {
-    const lower = text.toLowerCase();
-    if (lower.includes("hospital") || lower.includes("school")) return 90;
-    if (lower.includes("station") || lower.includes("main road")) return 75;
-    if (lower.includes("market")) return 65;
-    return 40;
+// High-impact place types from Google Places Nearby Search
+const HIGH_IMPACT_TYPES = [
+    'hospital', 'school', 'university', 'police', 'fire_station',
+    'train_station', 'bus_station', 'transit_station', 'airport',
+    'courthouse', 'city_hall', 'local_government_office'
+];
+
+const MEDIUM_IMPACT_TYPES = [
+    'market', 'shopping_mall', 'supermarket', 'bank',
+    'pharmacy', 'post_office', 'library', 'museum', 'park',
+    'stadium', 'hotel', 'gas_station', 'subway_station'
+];
+
+const getLocationImpactFromCoords = async (lat, lng) => {
+    try {
+        const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+        if (!apiKey) {
+            console.warn("⚠️ GOOGLE_MAPS_API_KEY not set, falling back to default location impact");
+            return 45;
+        }
+
+        // Use Places Nearby Search to find actual places near the coordinates
+        const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=200&key=${apiKey}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
+            console.warn("⚠️ Places nearby search failed:", data.status);
+            return 45;
+        }
+
+        const places = data.results || [];
+        const allTypes = places.flatMap(p => p.types || []);
+        const allNames = places.map(p => p.name?.toLowerCase() || '').join(' ');
+
+        console.log(`📍 Found ${places.length} nearby places at (${lat}, ${lng})`);
+
+        // --- Detect each factor independently ---
+        const hasHighImpact =
+            allTypes.some(t => HIGH_IMPACT_TYPES.includes(t)) ||
+            HIGH_IMPACT_TYPES.some(k => allNames.includes(k));
+
+        const hasMediumImpact =
+            allTypes.some(t => MEDIUM_IMPACT_TYPES.includes(t)) ||
+            MEDIUM_IMPACT_TYPES.some(k => allNames.includes(k));
+
+        // Check main road via reverse geocode
+        const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
+        const geocodeRes = await fetch(geocodeUrl);
+        const geocodeData = await geocodeRes.json();
+        const address = geocodeData.results?.[0]?.formatted_address?.toLowerCase() || '';
+        const geocodeTypes = geocodeData.results?.flatMap(r => r.types) || [];
+
+        const isMainRoad = geocodeTypes.includes('route') &&
+            (address.includes('highway') || address.includes('main') ||
+             address.includes('road') || address.includes('marg') ||
+             address.includes('nagar'));
+
+        // --- Cumulative scoring ---
+        // Base score from the highest-tier factor present
+        // Additional bonuses for each extra factor (diminishing, capped at 100)
+        //
+        // Tiers:   High-impact = 95, Main road = 80, Medium-impact = 70, Default = 45
+        // Bonuses: +5 per additional tier present (max 2 bonuses = +10)
+
+        const factorsPresent = [];
+        if (hasHighImpact)   factorsPresent.push({ label: 'high-impact facility', base: 95 });
+        if (isMainRoad)      factorsPresent.push({ label: 'main road',            base: 80 });
+        if (hasMediumImpact) factorsPresent.push({ label: 'medium-impact place',  base: 70 });
+
+        if (factorsPresent.length === 0) {
+            console.log(`📍 Residential/default → Score: 45`);
+            return 45;
+        }
+
+        // Sort by base score descending, take highest as starting point
+        factorsPresent.sort((a, b) => b.base - a.base);
+        const baseScore = factorsPresent[0].base;
+
+        // Each additional factor adds a +5 bonus (capped at 100)
+        const bonus = (factorsPresent.length - 1) * 5;
+        const finalScore = Math.min(100, baseScore + bonus);
+
+        const labels = factorsPresent.map(f => f.label).join(' + ');
+        console.log(`📍 Location factors: [${labels}] → Base: ${baseScore} + Bonus: ${bonus} = Score: ${finalScore}`);
+
+        return finalScore;
+
+    } catch (err) {
+        console.error("❌ Location impact error:", err.message);
+        return 45; // safe fallback
+    }
 };
 
 const getFrequencyScore = (count) => {
@@ -58,7 +159,17 @@ const getFrequencyScore = (count) => {
     return 20;
 };
 
-const getTimeScore = () => 10;
+// Time-pending score: older unresolved issues get higher urgency
+// Based on days since creation — issues age and compound risk
+const getTimeScore = (createdAt) => {
+    if (!createdAt) return 10;
+    const ageInHours = (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60);
+    if (ageInHours >= 168) return 100; // 7+ days → critical
+    if (ageInHours >= 72)  return 75;  // 3–7 days → high urgency
+    if (ageInHours >= 24)  return 50;  // 1–3 days → moderate urgency
+    if (ageInHours >= 6)   return 25;  // 6–24 hours → low urgency
+    return 10;                          // < 6 hours → just reported
+};
 
 
 export const createIssue = asyncHandler(async (req, res) => {
@@ -69,22 +180,19 @@ export const createIssue = asyncHandler(async (req, res) => {
         throw new apiError(400, "Please update your profile with a city before reporting issues");
     }
 
-    const lastIssue = await Issue.findOne({ reportedBy: userId })
-        .sort({ createdAt: -1 });
+    // Cooldown check - 15 minutes between issue submissions
+    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+    const recentIssue = await Issue.findOne({
+        reportedBy: userId,
+        createdAt: { $gte: fifteenMinutesAgo }
+    }).sort({ createdAt: -1 });
 
-    if (lastIssue) {
-        const diffInMinutes =
-            (Date.now() - new Date(lastIssue.createdAt).getTime()) / (1000 * 60);
-
-        if (diffInMinutes < 15) {
-            const remaining = Math.ceil(15 - diffInMinutes);
-            throw new apiError(
-                429,
-                `Please wait ${remaining} minutes before reporting another issue`
-            );
-        }
+    if (recentIssue) {
+        const timeLeft = Math.ceil((recentIssue.createdAt.getTime() + 15 * 60 * 1000 - Date.now()) / 60000);
+        throw new apiError(429, `Please wait ${timeLeft} minutes before reporting another issue`);
     }
 
+    // Daily limit check - increased to 20 issues per day
     const todayCount = await Issue.countDocuments({
         reportedBy: userId,
         createdAt: {
@@ -92,8 +200,8 @@ export const createIssue = asyncHandler(async (req, res) => {
         }
     });
 
-    if (todayCount >= 5) {
-        throw new apiError(429, "Daily issue limit reached");
+    if (todayCount >= 20) {
+        throw new apiError(429, "Daily issue limit reached (20 issues per day)");
     }
 
     const { title, description, lat, lng, category: userCategory } = req.body;
@@ -188,8 +296,8 @@ export const createIssue = asyncHandler(async (req, res) => {
     });
 
     const frequencyScore = getFrequencyScore(existingCount);
-    const locationImpact = getLocationImpact(description);
-    const timeScore = getTimeScore();
+    const locationImpact = await getLocationImpactFromCoords(location.lat, location.lng);
+    const timeScore = getTimeScore(new Date()); // new issue, starts at lowest time urgency
     const aiBoost = textAnalysis.urgencyBoost || 0;
 
     const baseScore = calculateBaseScore({
@@ -218,6 +326,7 @@ export const createIssue = asyncHandler(async (req, res) => {
             timePending: timeScore,
             aiAdjustment: aiBoost
         },
+        dimensions: imageAnalysis.dimensions || {},
         reportedBy: userId
     });
 
@@ -233,6 +342,7 @@ export const createIssue = asyncHandler(async (req, res) => {
                 combinedSeverity: finalSeverity,
                 category: textAnalysis.category,
                 confidence: imageAnalysis.confidence,
+                dimensions: imageAnalysis.dimensions,
                 explanation: textAnalysis.explanation
             }
         }, "Issue created successfully with AI analysis"));
@@ -311,8 +421,28 @@ export const updateIssueStatus = asyncHandler(async (req, res) => {
             throw new apiError(500, "Failed to upload resolution image");
         }
         
+        console.log("🔍 Comparing resolution photo with original issue photo...");
+        
+        // Compare resolution photo with original issue photo using AI
+        const comparisonResult = await compareResolutionPhotos(
+            issue.imageUrl,
+            resolutionImage.url
+        );
+        
+        console.log("📊 Resolution Comparison Result:", comparisonResult);
+        
+        // Check if resolved score is above 60%
+        if (comparisonResult.resolvedScore < 60) {
+            throw new apiError(400, 
+                `AI analysis indicates the issue may not be fully resolved (Score: ${comparisonResult.resolvedScore}%). ${comparisonResult.analysis || 'Please ensure the issue is completely fixed before marking as resolved.'}`
+            );
+        }
+        
         issue.resolutionImageUrl = resolutionImage.url;
+        issue.resolvedScore = comparisonResult.resolvedScore;
         issue.resolutionConfirmed = true;
+        
+        console.log(`✅ Resolution verified with AI score: ${comparisonResult.resolvedScore}%`);
     }
 
     // Set admin decision fields for resolved status
@@ -337,6 +467,20 @@ export const updateIssueStatus = asyncHandler(async (req, res) => {
                 newStatus: status,
                 updatedBy: req.user._id
             });
+
+            // Send email notification for resolved issues
+            if (status === 'Resolved') {
+                const { sendIssueResolvedEmail } = await import('../utils/sendEmail.js');
+                const populatedIssue = await Issue.findById(issue._id).populate('reportedBy', 'email name');
+                
+                if (populatedIssue?.reportedBy?.email) {
+                    await sendIssueResolvedEmail(populatedIssue.reportedBy.email, {
+                        issue: populatedIssue,
+                        resolvedScore: issue.resolvedScore
+                    });
+                    console.log(`✅ Resolution email sent to ${populatedIssue.reportedBy.email}`);
+                }
+            }
         } catch (notificationError) {
             console.error('Error sending status change notification:', notificationError);
         }
@@ -344,7 +488,13 @@ export const updateIssueStatus = asyncHandler(async (req, res) => {
 
     return res
         .status(200)
-        .json(new apiResponse(200, issue, "Issue status updated"));
+        .json(new apiResponse(200, {
+            issue,
+            resolvedScore: issue.resolvedScore,
+            message: issue.resolvedScore ? 
+                `Issue marked as resolved with AI verification score: ${issue.resolvedScore}%` : 
+                "Issue status updated"
+        }, "Issue status updated successfully"));
 });
 
 
@@ -538,6 +688,16 @@ export const reportIssueAsFake = asyncHandler(async (req, res) => {
             issue,
             reportedBy: req.user
         });
+
+        // Send email notification for spam report
+        const { sendIssueSpamEmail } = await import('../utils/sendEmail.js');
+        if (issue.reportedBy?.email) {
+            await sendIssueSpamEmail(issue.reportedBy.email, {
+                issue,
+                reportedBy: req.user
+            });
+            console.log(`✅ Spam report email sent to ${issue.reportedBy.email}`);
+        }
     } catch (notificationError) {
         console.error('Error sending spam notification:', notificationError);
     }
@@ -589,5 +749,50 @@ export const getHomeStats = asyncHandler(async (req, res) => {
     } catch (error) {
         console.error('Error fetching home stats:', error);
         throw new apiError(500, "Failed to fetch homepage statistics");
+    }
+});
+
+export const toggleUpvote = asyncHandler(async (req, res) => {
+    const { issueId } = req.params;
+    const userId = req.user._id;
+
+    if (!mongoose.Types.ObjectId.isValid(issueId)) {
+        throw new apiError(400, "Invalid issue ID");
+    }
+
+    const issue = await Issue.findById(issueId);
+    if (!issue) throw new apiError(404, "Issue not found");
+
+    // Cannot upvote your own issue
+    if (issue.reportedBy.toString() === userId.toString()) {
+        throw new apiError(400, "You cannot upvote your own issue");
+    }
+
+    const alreadyUpvoted = issue.upvotes.some(id => id.toString() === userId.toString());
+
+    if (alreadyUpvoted) {
+        // Remove upvote
+        issue.upvotes = issue.upvotes.filter(id => id.toString() !== userId.toString());
+        issue.upvoteCount = issue.upvotes.length;
+        await issue.save();
+        return res.status(200).json(new apiResponse(200, {
+            upvoted: false,
+            upvoteCount: issue.upvoteCount
+        }, "Upvote removed"));
+    } else {
+        // Add upvote
+        issue.upvotes.push(userId);
+        issue.upvoteCount = issue.upvotes.length;
+        await issue.save();
+
+        // Give +2 trust score to the reporter for community validation
+        await User.findByIdAndUpdate(issue.reportedBy, {
+            $inc: { trustScore: 2 }
+        });
+
+        return res.status(200).json(new apiResponse(200, {
+            upvoted: true,
+            upvoteCount: issue.upvoteCount
+        }, "Issue upvoted successfully"));
     }
 });

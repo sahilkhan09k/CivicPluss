@@ -137,3 +137,43 @@ body {
 .link-hover {
   @apply text-gray-700 hover:text-primary-600 transition-colors duration-200 font-medium;
 }
+
+/* ===== Mobile Responsiveness ===== */
+
+/* Prevent horizontal overflow on mobile */
+html, body {
+  overflow-x: hidden;
+}
+
+/* Responsive card padding on mobile */
+@media (max-width: 768px) {
+  .card, .card-gradient, .card-accent {
+    @apply p-4 rounded-xl;
+  }
+
+  .stat-card {
+    @apply p-4 rounded-xl;
+  }
+
+  /* Smaller text on mobile for headings */
+  h1 { font-size: clamp(1.5rem, 5vw, 3rem); }
+  h2 { font-size: clamp(1.25rem, 4vw, 2rem); }
+
+  /* Full-width buttons on mobile */
+  .btn-primary, .btn-secondary {
+    @apply w-full justify-center;
+  }
+}
+
+/* Smooth sidebar transition */
+.sidebar-transition {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Touch-friendly tap targets */
+@media (max-width: 768px) {
+  button, a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}

@@ -1,7 +1,17 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 
-                     (window.location.hostname === 'localhost' 
-                       ? 'http://localhost:5000/api/v1' 
-                       : 'https://civicpluss.onrender.com/api/v1');
+// Dynamically resolve API URL based on current hostname.
+// This ensures cookies work correctly (same-origin) whether accessing
+// from localhost or a local network IP (e.g. 192.168.x.x on mobile).
+const getApiBaseUrl = () => {
+    // In production, use the env variable (points to Render)
+    if (import.meta.env.VITE_API_URL && !import.meta.env.VITE_API_URL.includes('localhost')) {
+        return import.meta.env.VITE_API_URL;
+    }
+    // In development, always use the same hostname the browser is on
+    // so cookies are same-origin and sameSite: lax works correctly
+    return `http://${window.location.hostname}:5000/api/v1`;
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 console.log('API Base URL:', API_BASE_URL);
 console.log('Environment:', import.meta.env.MODE);
@@ -382,6 +392,12 @@ class ApiService {
 
     async reportIssueAsFake(issueId) {
         return this.request(`/issue/reportAsFake/${issueId}`, {
+            method: 'PUT',
+        });
+    }
+
+    async toggleUpvote(issueId) {
+        return this.request(`/issue/upvote/${issueId}`, {
             method: 'PUT',
         });
     }
