@@ -82,9 +82,9 @@ const AdminIssueDetail = () => {
 
     if (loading) {
         return (
-            <div className="flex min-h-screen bg-gray-50">
+            <div className="flex min-h-screen bg-gray-50 overflow-x-hidden">
                 <Sidebar isAdmin={true} />
-                <div className="flex-1 md:ml-64 flex items-center justify-center pt-16 md:pt-0">
+                <div className="flex-1 md:ml-64 min-w-0 flex items-center justify-center pt-16 md:pt-0">
                     <div className="text-center">
                         <Loader className="h-12 w-12 text-primary-600 animate-spin mx-auto mb-4" />
                         <p className="text-gray-600">Loading issue details...</p>
@@ -96,9 +96,9 @@ const AdminIssueDetail = () => {
 
     if (error || !issue) {
         return (
-            <div className="flex min-h-screen bg-gray-50">
+            <div className="flex min-h-screen bg-gray-50 overflow-x-hidden">
                 <Sidebar isAdmin={true} />
-                <div className="flex-1 md:ml-64 flex items-center justify-center pt-16 md:pt-0">
+                <div className="flex-1 md:ml-64 min-w-0 flex items-center justify-center pt-16 md:pt-0">
                     <div className="text-center">
                         <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
                         <h2 className="text-2xl font-bold text-gray-900 mb-2">Issue Not Found</h2>
@@ -113,10 +113,10 @@ const AdminIssueDetail = () => {
     }
 
     return (
-        <div className="flex min-h-screen bg-gray-50">
+        <div className="flex min-h-screen bg-gray-50 overflow-x-hidden">
             <Sidebar isAdmin={true} />
 
-            <div className="flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8">
+            <div className="flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8 min-w-0 overflow-x-hidden">
                 <button
                     onClick={() => navigate('/admin/issue-intelligence')}
                     className="mb-6 flex items-center text-gray-600 hover:text-primary-600 transition-colors"
@@ -129,11 +129,11 @@ const AdminIssueDetail = () => {
                     {/* Header */}
                     <div className="bg-gradient-to-br from-white via-gray-50 to-gray-100 rounded-2xl shadow-xl border border-gray-200 p-4 md:p-8 mb-6">
                         <div className="flex items-start justify-between mb-6">
-                            <div className="flex-1">
-                                <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-2">
+                            <div className="flex-1 min-w-0">
+                                <h1 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-2 break-words">
                                     {issue.title}
                                 </h1>
-                                <div className="flex items-center space-x-4 text-sm text-gray-600">
+                                <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
                                     <div className="flex items-center bg-white px-3 py-1 rounded-full shadow-sm">
                                         <User className="h-4 w-4 mr-2 text-primary-600" />
                                         <span className="font-medium">Reported by {issue.reportedBy?.name || 'Unknown'}</span>
@@ -154,7 +154,7 @@ const AdminIssueDetail = () => {
                                     )}
                                 </div>
                             </div>
-                            <div className="flex items-center space-x-3 ml-6">
+                            <div className="flex flex-wrap items-center gap-2 ml-4 flex-shrink-0">
                                 <span className={`px-4 py-2 rounded-xl text-sm font-semibold border-2 shadow-sm ${getPriorityColor(issue.priority)}`}>
                                     {issue.priority} Priority
                                 </span>

@@ -123,7 +123,7 @@ const AdminDashboard = () => {
 
     if (loading) {
         return (
-            <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 relative overflow-hidden">
+            <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 relative overflow-x-hidden">
                 {/* Background Elements */}
                 <div className="absolute inset-0">
                     <div className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-br from-primary-200/20 to-transparent rounded-full blur-3xl animate-float"></div>
@@ -131,7 +131,7 @@ const AdminDashboard = () => {
                 </div>
 
                 <Sidebar isAdmin={true} />
-                <div className="relative z-10 flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8 flex items-center justify-center">
+                <div className="relative z-10 flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8 min-w-0 overflow-x-hidden flex items-center justify-center">
                     <div className="text-center">
                         <div className="bg-gradient-to-br from-primary-500 to-accent-500 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl animate-pulse">
                             <Loader2 className="h-10 w-10 text-white animate-spin" />
@@ -146,7 +146,7 @@ const AdminDashboard = () => {
 
     if (error) {
         return (
-            <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 relative overflow-hidden">
+            <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 relative overflow-x-hidden">
                 {/* Background Elements */}
                 <div className="absolute inset-0">
                     <div className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-br from-primary-200/20 to-transparent rounded-full blur-3xl animate-float"></div>
@@ -154,7 +154,7 @@ const AdminDashboard = () => {
                 </div>
 
                 <Sidebar isAdmin={true} />
-                <div className="relative z-10 flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8">
+                <div className="relative z-10 flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8 min-w-0 overflow-x-hidden">
                     <div className="max-w-2xl mx-auto">
                         <div className="card-gradient text-center py-16 border-2 border-red-200 bg-gradient-to-br from-red-50 to-red-100/50">
                             <div className="bg-gradient-to-br from-red-500 to-red-600 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
@@ -180,7 +180,7 @@ const AdminDashboard = () => {
     const issuesWithLocation = stats.issuesWithLocation || issues.filter(i => i.location?.lat && i.location?.lng);
 
     return (
-        <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 relative overflow-hidden">
+        <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 relative overflow-x-hidden">
             {/* Background Elements */}
             <div className="absolute inset-0">
                 <div className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-br from-primary-200/20 to-transparent rounded-full blur-3xl animate-float"></div>
@@ -189,7 +189,7 @@ const AdminDashboard = () => {
 
             <Sidebar isAdmin={true} />
 
-            <div className="relative z-10 flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8">
+            <div className="relative z-10 flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8 min-w-0 overflow-x-hidden">
                 <div className="max-w-7xl mx-auto">
                     <div className="mb-12 animate-fade-in">
                         <div className="flex items-center space-x-4 mb-6">
@@ -208,55 +208,55 @@ const AdminDashboard = () => {
                     </div>
 
                     {/* Key Metrics */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 animate-slide-up">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-8 animate-slide-up">
                         <div className="stat-card group">
                             <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-gray-600 text-sm mb-2 font-medium">Critical Unresolved</p>
-                                    <p className="text-4xl font-black text-red-600 mb-1">{stats.criticalUnresolved}</p>
+                                <div className="min-w-0">
+                                    <p className="text-gray-600 text-xs md:text-sm mb-1 md:mb-2 font-medium">Critical Unresolved</p>
+                                    <p className="text-2xl md:text-4xl font-black text-red-600 mb-1">{stats.criticalUnresolved}</p>
                                     <div className="w-12 h-1 bg-gradient-to-r from-red-500 to-red-600 rounded-full"></div>
                                 </div>
-                                <div className="bg-gradient-to-br from-red-100 to-red-200 p-4 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                                    <AlertCircle className="h-8 w-8 text-red-600" />
+                                <div className="bg-gradient-to-br from-red-100 to-red-200 p-2 md:p-4 rounded-2xl group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                                    <AlertCircle className="h-6 w-6 md:h-8 md:w-8 text-red-600" />
                                 </div>
                             </div>
                         </div>
 
                         <div className="stat-card group">
                             <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-gray-600 text-sm mb-2 font-medium">Avg Resolution Time</p>
-                                    <p className="text-4xl font-black text-orange-600 mb-1">{stats.avgResolutionTime}</p>
+                                <div className="min-w-0">
+                                    <p className="text-gray-600 text-xs md:text-sm mb-1 md:mb-2 font-medium">Avg Resolution Time</p>
+                                    <p className="text-2xl md:text-4xl font-black text-orange-600 mb-1 truncate">{stats.avgResolutionTime}</p>
                                     <div className="w-12 h-1 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full"></div>
                                 </div>
-                                <div className="bg-gradient-to-br from-orange-100 to-orange-200 p-4 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                                    <Clock className="h-8 w-8 text-orange-600" />
+                                <div className="bg-gradient-to-br from-orange-100 to-orange-200 p-2 md:p-4 rounded-2xl group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                                    <Clock className="h-6 w-6 md:h-8 md:w-8 text-orange-600" />
                                 </div>
                             </div>
                         </div>
 
                         <div className="stat-card group">
                             <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-gray-600 text-sm mb-2 font-medium">Resolution Efficiency</p>
-                                    <p className="text-4xl font-black text-green-600 mb-1">{stats.resolutionEfficiency}%</p>
+                                <div className="min-w-0">
+                                    <p className="text-gray-600 text-xs md:text-sm mb-1 md:mb-2 font-medium">Resolution Efficiency</p>
+                                    <p className="text-2xl md:text-4xl font-black text-green-600 mb-1">{stats.resolutionEfficiency}%</p>
                                     <div className="w-12 h-1 bg-gradient-to-r from-green-500 to-green-600 rounded-full"></div>
                                 </div>
-                                <div className="bg-gradient-to-br from-green-100 to-green-200 p-4 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                                    <TrendingUp className="h-8 w-8 text-green-600" />
+                                <div className="bg-gradient-to-br from-green-100 to-green-200 p-2 md:p-4 rounded-2xl group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                                    <TrendingUp className="h-6 w-6 md:h-8 md:w-8 text-green-600" />
                                 </div>
                             </div>
                         </div>
 
                         <div className="stat-card group">
                             <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-gray-600 text-sm mb-2 font-medium">Total Issues</p>
-                                    <p className="text-4xl font-black text-primary-600 mb-1">{stats.totalIssues}</p>
+                                <div className="min-w-0">
+                                    <p className="text-gray-600 text-xs md:text-sm mb-1 md:mb-2 font-medium">Total Issues</p>
+                                    <p className="text-2xl md:text-4xl font-black text-primary-600 mb-1">{stats.totalIssues}</p>
                                     <div className="w-12 h-1 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full"></div>
                                 </div>
-                                <div className="bg-gradient-to-br from-primary-100 to-primary-200 p-4 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                                    <MapPin className="h-8 w-8 text-primary-600" />
+                                <div className="bg-gradient-to-br from-primary-100 to-primary-200 p-2 md:p-4 rounded-2xl group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                                    <MapPin className="h-6 w-6 md:h-8 md:w-8 text-primary-600" />
                                 </div>
                             </div>
                         </div>

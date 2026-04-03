@@ -118,9 +118,9 @@ const ChallengeQueue = () => {
 
     if (loading) {
         return (
-            <div className="flex min-h-screen bg-gray-50">
+            <div className="flex min-h-screen bg-gray-50 overflow-x-hidden">
                 <Sidebar isAdmin={true} />
-                <div className="flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8 flex items-center justify-center">
+                <div className="flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8 min-w-0 flex items-center justify-center">
                     <Loader2 className="h-12 w-12 animate-spin text-primary-600" />
                 </div>
             </div>
@@ -129,9 +129,9 @@ const ChallengeQueue = () => {
 
     if (error) {
         return (
-            <div className="flex min-h-screen bg-gray-50">
+            <div className="flex min-h-screen bg-gray-50 overflow-x-hidden">
                 <Sidebar isAdmin={true} />
-                <div className="flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8">
+                <div className="flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8 min-w-0">
                     <div className="card bg-red-50 border-2 border-red-200 text-center py-12">
                         <AlertTriangle className="h-12 w-12 text-red-600 mx-auto mb-4" />
                         <p className="text-red-700 text-lg">{error}</p>
@@ -142,10 +142,10 @@ const ChallengeQueue = () => {
     }
 
     return (
-        <div className="flex min-h-screen bg-gray-50">
+        <div className="flex min-h-screen bg-gray-50 overflow-x-hidden">
             <Sidebar isAdmin={true} />
 
-            <div className="flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8">
+            <div className="flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8 min-w-0 overflow-x-hidden">
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold mb-2">Challenge Queue</h1>
                     <p className="text-gray-600">Review user challenges to admin decisions</p>

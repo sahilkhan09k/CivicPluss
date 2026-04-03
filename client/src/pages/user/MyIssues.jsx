@@ -121,14 +121,14 @@ const MyIssues = () => {
 
     if (loading) {
         return (
-            <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 relative overflow-hidden">
-                {/* Background Elements */}
-                <div className="absolute inset-0">
-                    <div className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-br from-primary-200/20 to-transparent rounded-full blur-3xl animate-float"></div>
-                    <div className="absolute bottom-20 right-20 w-80 h-80 bg-gradient-to-br from-accent-200/20 to-transparent rounded-full blur-3xl animate-float" style={{animationDelay: '3s'}}></div>
-                </div>
+            <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 relative overflow-x-hidden">
+            {/* Background Elements */}
+            <div className="absolute inset-0">
+                <div className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-br from-primary-200/20 to-transparent rounded-full blur-3xl animate-float"></div>
+                <div className="absolute bottom-20 right-20 w-80 h-80 bg-gradient-to-br from-accent-200/20 to-transparent rounded-full blur-3xl animate-float" style={{animationDelay: '3s'}}></div>
+            </div>
 
-                <Sidebar />
+            <Sidebar />
                 <div className="relative z-10 flex-1 md:ml-64 flex items-center justify-center pt-16 md:pt-0">
                     <div className="text-center">
                         <div className="bg-gradient-to-br from-primary-500 to-accent-500 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl animate-pulse">
@@ -143,7 +143,7 @@ const MyIssues = () => {
     }
 
     return (
-        <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 relative overflow-hidden">
+        <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 relative overflow-x-hidden">
             {/* Background Elements */}
             <div className="absolute inset-0">
                 <div className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-br from-primary-200/20 to-transparent rounded-full blur-3xl animate-float"></div>
@@ -152,7 +152,7 @@ const MyIssues = () => {
 
             <Sidebar />
 
-            <div className="relative z-10 flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8">
+            <div className="relative z-10 flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8 min-w-0 overflow-x-hidden">
                 <div className="max-w-7xl mx-auto">
                     <div className="mb-12 animate-fade-in">
                         <div className="flex items-center space-x-4 mb-6">
@@ -234,38 +234,38 @@ const MyIssues = () => {
                                 <div key={issue._id} className="animate-slide-up" style={{animationDelay: `${index * 0.1}s`}}>
                                     <Link to={`/issue/${issue._id}`} className="block group">
                                         <div className="card-gradient hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 hover:scale-[1.02] group-hover:border-primary-300">
-                                            <div className="flex items-start space-x-6">
+                                            <div className="flex items-start space-x-4 md:space-x-6">
                                                 {issue.imageUrl && (
                                                     <div className="relative overflow-hidden rounded-2xl flex-shrink-0 shadow-lg">
                                                         <img
                                                             src={issue.imageUrl}
                                                             alt={issue.title}
-                                                            className="w-40 h-40 object-cover transition-transform duration-500 group-hover:scale-110"
+                                                            className="w-24 h-24 md:w-40 md:h-40 object-cover transition-transform duration-500 group-hover:scale-110"
                                                         />
                                                         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                                     </div>
                                                 )}
-                                                <div className="flex-1 min-w-0">
+                                                <div className="flex-1 min-w-0 overflow-hidden">
                                                     <div className="flex items-start justify-between mb-4">
-                                                        <h3 className="text-2xl font-bold text-gray-900 line-clamp-1 group-hover:text-primary-700 transition-colors duration-300">
+                                                        <h3 className="text-xl md:text-2xl font-bold text-gray-900 line-clamp-1 group-hover:text-primary-700 transition-colors duration-300 min-w-0 mr-2">
                                                             {issue.title}
                                                         </h3>
-                                                        <div className="flex items-center space-x-3 ml-6 flex-wrap">
-                                                            <span className={`px-4 py-2 rounded-2xl text-sm font-bold border-2 shadow-lg backdrop-blur-sm ${getPriorityColor(issue.priority)}`}>
+                                                        <div className="flex items-center flex-wrap gap-2 ml-2 flex-shrink-0">
+                                                            <span className={`px-3 py-1 md:px-4 md:py-2 rounded-2xl text-xs md:text-sm font-bold border-2 shadow-lg backdrop-blur-sm ${getPriorityColor(issue.priority)}`}>
                                                                 {issue.priority}
                                                             </span>
-                                                            <span className={`px-4 py-2 rounded-2xl text-sm font-bold border-2 shadow-lg backdrop-blur-sm ${getStatusColor(issue.status)}`}>
+                                                            <span className={`px-3 py-1 md:px-4 md:py-2 rounded-2xl text-xs md:text-sm font-bold border-2 shadow-lg backdrop-blur-sm ${getStatusColor(issue.status)}`}>
                                                                 {issue.status}
                                                             </span>
                                                             {getChallengeStatusBadge(issue)}
                                                         </div>
                                                     </div>
 
-                                                    <p className="text-gray-600 mb-6 line-clamp-2 text-lg leading-relaxed">
+                                                    <p className="text-gray-600 mb-4 md:mb-6 line-clamp-2 text-base md:text-lg leading-relaxed">
                                                         {issue.description}
                                                     </p>
 
-                                                    <div className="flex items-center space-x-8 text-sm text-gray-500 mb-4">
+                                                    <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500 mb-4">
                                                         <div className="flex items-center bg-white/50 backdrop-blur-sm px-3 py-2 rounded-xl">
                                                             <Calendar className="h-4 w-4 mr-2 text-primary-500" />
                                                             <span className="font-medium">{formatDate(issue.createdAt)}</span>
