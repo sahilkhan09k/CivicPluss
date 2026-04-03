@@ -120,95 +120,87 @@ const Profile = () => {
                     </div>
 
                     {/* Profile Card */}
-                    <div className="card-gradient mb-8">
-                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
-                            <div className="flex items-start space-x-4 flex-1 min-w-0">
-                                <div className="bg-gradient-to-br from-primary-500 to-primary-700 w-16 h-16 md:w-24 md:h-24 rounded-2xl flex items-center justify-center flex-shrink-0">
-                                    <User className="h-8 w-8 md:h-12 md:w-12 text-white" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    {!editing ? (
-                                        <>
-                                            <h2 className="text-xl md:text-3xl font-bold text-gray-900 mb-2 truncate">{user?.name}</h2>
-                                            <div className="space-y-1.5 text-gray-600 text-sm">
-                                                <div className="flex items-center min-w-0">
-                                                    <Mail className="h-4 w-4 mr-2 text-primary-600 flex-shrink-0" />
-                                                    <span className="truncate">{user?.email}</span>
-                                                </div>
-                                                {user?.city && (
-                                                    <div className="flex items-center flex-wrap gap-1">
-                                                        <Award className="h-4 w-4 mr-1 text-primary-600 flex-shrink-0" />
-                                                        <span>City:</span>
-                                                        <span className="px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full text-xs font-semibold">
-                                                            {user.city}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                                <div className="flex items-center">
-                                                    <Calendar className="h-4 w-4 mr-2 text-primary-600 flex-shrink-0" />
-                                                    <span className="text-xs">Member since {user?.createdAt ? formatDate(user.createdAt) : 'N/A'}</span>
-                                                </div>
-                                                <div className="flex items-center flex-wrap gap-1">
-                                                    <Award className="h-4 w-4 mr-1 text-primary-600 flex-shrink-0" />
-                                                    <span>Role:</span>
-                                                    <span className="px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full text-xs font-semibold">
-                                                        {user?.role || 'User'}
-                                                    </span>
-                                                </div>
+                    <div className="card-gradient mb-6">
+                        <div className="flex items-start gap-4">
+                            {/* Avatar */}
+                            <div className="bg-gradient-to-br from-primary-500 to-primary-700 w-14 h-14 md:w-20 md:h-20 rounded-2xl flex items-center justify-center flex-shrink-0">
+                                <User className="h-7 w-7 md:h-10 md:w-10 text-white" />
+                            </div>
+
+                            {/* Info */}
+                            <div className="flex-1 min-w-0">
+                                {!editing ? (
+                                    <>
+                                        <div className="flex items-center justify-between gap-2 mb-1">
+                                            <h2 className="text-lg md:text-2xl font-bold text-gray-900 truncate">{user?.name}</h2>
+                                            <button
+                                                onClick={handleEditToggle}
+                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors text-xs font-semibold flex-shrink-0"
+                                            >
+                                                <Edit2 className="h-3.5 w-3.5" />
+                                                Edit
+                                            </button>
+                                        </div>
+                                        <div className="space-y-1 text-gray-600 text-xs md:text-sm">
+                                            <div className="flex items-center min-w-0">
+                                                <Mail className="h-3.5 w-3.5 mr-1.5 text-primary-500 flex-shrink-0" />
+                                                <span className="truncate">{user?.email}</span>
                                             </div>
-                                        </>
-                                    ) : (
-                                        <div className="space-y-4">
-                                            <div>
-                                                <label className="block text-sm font-semibold text-gray-700 mb-2">Name</label>
-                                                <input
-                                                    type="text"
-                                                    value={editData.name}
-                                                    onChange={(e) => setEditData({ ...editData, name: e.target.value })}
-                                                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-primary-100 focus:border-primary-400 outline-none"
-                                                    disabled={updating}
-                                                />
+                                            {user?.city && (
+                                                <div className="flex items-center gap-1">
+                                                    <Award className="h-3.5 w-3.5 text-primary-500 flex-shrink-0" />
+                                                    <span>City:</span>
+                                                    <span className="px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full text-xs font-semibold">{user.city}</span>
+                                                </div>
+                                            )}
+                                            <div className="flex items-center">
+                                                <Calendar className="h-3.5 w-3.5 mr-1.5 text-primary-500 flex-shrink-0" />
+                                                <span>Member since {user?.createdAt ? formatDate(user.createdAt) : 'N/A'}</span>
                                             </div>
-                                            <CitySelector
-                                                value={editData.city}
-                                                onChange={(city) => setEditData({ ...editData, city })}
+                                            <div className="flex items-center gap-1">
+                                                <Award className="h-3.5 w-3.5 text-primary-500 flex-shrink-0" />
+                                                <span>Role:</span>
+                                                <span className="px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full text-xs font-semibold capitalize">{user?.role || 'User'}</span>
+                                            </div>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="space-y-3">
+                                        <div>
+                                            <label className="block text-sm font-semibold text-gray-700 mb-1">Name</label>
+                                            <input
+                                                type="text"
+                                                value={editData.name}
+                                                onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                                                className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-primary-100 focus:border-primary-400 outline-none text-sm"
                                                 disabled={updating}
                                             />
-                                            {updateError && (
-                                                <p className="text-sm text-red-600">{updateError}</p>
-                                            )}
                                         </div>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="flex space-x-2 flex-shrink-0">
-                                {!editing ? (
-                                    <button
-                                        onClick={handleEditToggle}
-                                        className="flex items-center space-x-2 px-3 py-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors text-sm"
-                                    >
-                                        <Edit2 className="h-4 w-4" />
-                                        <span>Edit</span>
-                                    </button>
-                                ) : (
-                                    <>
-                                        <button
-                                            onClick={handleUpdateProfile}
+                                        <CitySelector
+                                            value={editData.city}
+                                            onChange={(city) => setEditData({ ...editData, city })}
                                             disabled={updating}
-                                            className="flex items-center space-x-2 px-3 py-2 bg-success-600 text-white rounded-xl hover:bg-success-700 transition-colors disabled:opacity-50 text-sm"
-                                        >
-                                            <Save className="h-4 w-4" />
-                                            <span>{updating ? 'Saving...' : 'Save'}</span>
-                                        </button>
-                                        <button
-                                            onClick={handleEditToggle}
-                                            disabled={updating}
-                                            className="flex items-center space-x-2 px-3 py-2 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-colors disabled:opacity-50 text-sm"
-                                        >
-                                            <X className="h-4 w-4" />
-                                            <span>Cancel</span>
-                                        </button>
-                                    </>
+                                        />
+                                        {updateError && <p className="text-sm text-red-600">{updateError}</p>}
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={handleUpdateProfile}
+                                                disabled={updating}
+                                                className="flex items-center gap-1.5 px-3 py-2 bg-success-600 text-white rounded-xl hover:bg-success-700 transition-colors disabled:opacity-50 text-sm font-semibold"
+                                            >
+                                                <Save className="h-4 w-4" />
+                                                {updating ? 'Saving...' : 'Save'}
+                                            </button>
+                                            <button
+                                                onClick={handleEditToggle}
+                                                disabled={updating}
+                                                className="flex items-center gap-1.5 px-3 py-2 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-colors disabled:opacity-50 text-sm font-semibold"
+                                            >
+                                                <X className="h-4 w-4" />
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
                                 )}
                             </div>
                         </div>
@@ -219,18 +211,18 @@ const Profile = () => {
                         )}
                     </div>
 
-                    {/* Stats Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    {/* Stats Grid — 2 cols on mobile, 4 on desktop */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6">
                         <div className="stat-card">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-gray-600 text-sm mb-1 font-medium">Total Issues</p>
-                                    <p className="text-4xl font-bold bg-gradient-to-r from-primary-600 to-primary-700 bg-clip-text text-transparent">
+                                    <p className="text-gray-600 text-xs md:text-sm mb-1 font-medium">Total Issues</p>
+                                    <p className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary-600 to-primary-700 bg-clip-text text-transparent">
                                         {stats.total}
                                     </p>
                                 </div>
-                                <div className="bg-primary-100 p-3 rounded-xl">
-                                    <TrendingUp className="h-8 w-8 text-primary-600" />
+                                <div className="bg-primary-100 p-2 md:p-3 rounded-xl">
+                                    <TrendingUp className="h-6 w-6 md:h-8 md:w-8 text-primary-600" />
                                 </div>
                             </div>
                         </div>
@@ -238,13 +230,13 @@ const Profile = () => {
                         <div className="stat-card">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-gray-600 text-sm mb-1 font-medium">Resolved</p>
-                                    <p className="text-4xl font-bold bg-gradient-to-r from-success-600 to-success-700 bg-clip-text text-transparent">
+                                    <p className="text-gray-600 text-xs md:text-sm mb-1 font-medium">Resolved</p>
+                                    <p className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-success-600 to-success-700 bg-clip-text text-transparent">
                                         {stats.resolved}
                                     </p>
                                 </div>
-                                <div className="bg-success-100 p-3 rounded-xl">
-                                    <CheckCircle className="h-8 w-8 text-success-600" />
+                                <div className="bg-success-100 p-2 md:p-3 rounded-xl">
+                                    <CheckCircle className="h-6 w-6 md:h-8 md:w-8 text-success-600" />
                                 </div>
                             </div>
                         </div>
@@ -252,13 +244,13 @@ const Profile = () => {
                         <div className="stat-card">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-gray-600 text-sm mb-1 font-medium">In Progress</p>
-                                    <p className="text-4xl font-bold bg-gradient-to-r from-warning-600 to-warning-700 bg-clip-text text-transparent">
+                                    <p className="text-gray-600 text-xs md:text-sm mb-1 font-medium">In Progress</p>
+                                    <p className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-warning-600 to-warning-700 bg-clip-text text-transparent">
                                         {stats.inProgress}
                                     </p>
                                 </div>
-                                <div className="bg-warning-100 p-3 rounded-xl">
-                                    <Clock className="h-8 w-8 text-warning-600" />
+                                <div className="bg-warning-100 p-2 md:p-3 rounded-xl">
+                                    <Clock className="h-6 w-6 md:h-8 md:w-8 text-warning-600" />
                                 </div>
                             </div>
                         </div>
@@ -266,13 +258,13 @@ const Profile = () => {
                         <div className="stat-card">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-gray-600 text-sm mb-1 font-medium">Pending</p>
-                                    <p className="text-4xl font-bold bg-gradient-to-r from-gray-600 to-gray-700 bg-clip-text text-transparent">
+                                    <p className="text-gray-600 text-xs md:text-sm mb-1 font-medium">Pending</p>
+                                    <p className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-600 to-gray-700 bg-clip-text text-transparent">
                                         {stats.pending}
                                     </p>
                                 </div>
-                                <div className="bg-gray-100 p-3 rounded-xl">
-                                    <TrendingUp className="h-8 w-8 text-gray-600" />
+                                <div className="bg-gray-100 p-2 md:p-3 rounded-xl">
+                                    <TrendingUp className="h-6 w-6 md:h-8 md:w-8 text-gray-600" />
                                 </div>
                             </div>
                         </div>

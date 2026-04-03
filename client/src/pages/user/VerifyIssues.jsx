@@ -125,26 +125,26 @@ const VerifyIssues = () => {
                 <div className="max-w-4xl mx-auto">
 
                     {/* Header */}
-                    <div className="mb-8">
-                        <div className="flex items-center space-x-4 mb-3">
-                            <div className="bg-gradient-to-br from-primary-500 to-accent-500 p-4 rounded-2xl shadow-lg">
-                                <Users className="h-8 w-8 text-white" />
+                    <div className="mb-6">
+                        <div className="flex items-center gap-3 mb-1">
+                            <div className="bg-gradient-to-br from-primary-500 to-accent-500 p-3 rounded-2xl shadow-lg flex-shrink-0">
+                                <Users className="h-6 w-6 text-white" />
                             </div>
                             <div>
-                                <h1 className="text-4xl font-black bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">
+                                <h1 className="text-2xl md:text-4xl font-black bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">
                                     Community Verification
                                 </h1>
-                                <p className="text-gray-600 text-lg">Upvote genuine issues to boost their priority</p>
+                                <p className="text-gray-600 text-sm md:text-base">Upvote genuine issues to boost their priority</p>
                             </div>
                         </div>
                     </div>
 
                     {/* Info Banner */}
-                    <div className="mb-6 p-5 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200">
-                        <h3 className="font-bold text-blue-900 mb-2 flex items-center gap-2">
-                            <ThumbsUp className="h-5 w-5" /> Why Upvote Issues?
+                    <div className="mb-5 p-4 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200">
+                        <h3 className="font-bold text-blue-900 mb-2 flex items-center gap-2 text-sm">
+                            <ThumbsUp className="h-4 w-4" /> Why Upvote Issues?
                         </h3>
-                        <div className="grid grid-cols-2 gap-2 text-sm text-blue-800">
+                        <div className="grid grid-cols-1 gap-1 text-xs text-blue-800">
                             <span>✅ Confirms the issue is real</span>
                             <span>📈 Boosts issue priority score</span>
                             <span>🏆 Reporter earns +2 trust points</span>
@@ -153,27 +153,29 @@ const VerifyIssues = () => {
                     </div>
 
                     {/* Sort Controls */}
-                    <div className="mb-6 flex flex-wrap items-center gap-2">
-                        <span className="text-sm font-semibold text-gray-600">Sort by:</span>
-                        {[
-                            { key: 'priority', label: '🎯 Priority' },
-                            { key: 'upvotes', label: '👍 Most Upvoted' },
-                            { key: 'newest', label: '🕐 Newest' },
-                        ].map(({ key, label }) => (
-                            <button
-                                key={key}
-                                onClick={() => setSortBy(key)}
-                                className={`px-3 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                                    sortBy === key
-                                        ? 'bg-primary-600 text-white shadow-lg'
-                                        : 'bg-white text-gray-600 border border-gray-200 hover:border-primary-300'
-                                }`}
-                            >
-                                {label}
-                            </button>
-                        ))}
-                        <span className="text-sm text-gray-500 font-medium ml-auto">
-                            {sortedIssues.length} issues
+                    <div className="mb-5 flex items-center gap-2">
+                        <span className="text-xs font-semibold text-gray-500 flex-shrink-0">Sort:</span>
+                        <div className="flex gap-1.5 flex-1">
+                            {[
+                                { key: 'priority', label: '🎯 Priority' },
+                                { key: 'upvotes', label: '👍 Upvoted' },
+                                { key: 'newest', label: '🕐 Newest' },
+                            ].map(({ key, label }) => (
+                                <button
+                                    key={key}
+                                    onClick={() => setSortBy(key)}
+                                    className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
+                                        sortBy === key
+                                            ? 'bg-primary-600 text-white shadow-md'
+                                            : 'bg-white text-gray-600 border border-gray-200 hover:border-primary-300'
+                                    }`}
+                                >
+                                    {label}
+                                </button>
+                            ))}
+                        </div>
+                        <span className="text-xs text-gray-400 font-medium flex-shrink-0">
+                            {sortedIssues.length}
                         </span>
                     </div>
 

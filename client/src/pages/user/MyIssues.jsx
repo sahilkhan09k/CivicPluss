@@ -183,29 +183,29 @@ const MyIssues = () => {
                     )}
 
                     {/* Filter Tabs */}
-                    <div className="mb-8 flex flex-wrap gap-3 animate-slide-up">
-                        {['all', 'Pending', 'In Progress', 'Resolved'].map((status) => (
-                            <button
-                                key={status}
-                                onClick={() => setFilter(status)}
-                                className={`px-6 py-3 rounded-2xl font-bold transition-all duration-300 transform hover:scale-105 ${
-                                    filter === status
-                                        ? 'bg-gradient-to-r from-primary-500 via-primary-600 to-primary-700 text-white shadow-2xl shadow-primary-500/30 border-2 border-primary-400'
-                                        : 'bg-white/90 backdrop-blur-sm text-gray-700 hover:bg-white border-2 border-gray-200 hover:border-primary-300 shadow-lg hover:shadow-xl'
-                                }`}
-                            >
-                                {status === 'all' ? 'All Issues' : status}
-                                {status !== 'all' && (
-                                    <span className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                                        filter === status
-                                            ? 'bg-white/20 text-white'
-                                            : 'bg-primary-100 text-primary-700'
+                    <div className="mb-6 grid grid-cols-2 md:flex md:flex-wrap gap-2 md:gap-3">
+                        {['all', 'Pending', 'In Progress', 'Resolved'].map((status) => {
+                            const count = status !== 'all' ? issues.filter(i => i.status === status).length : issues.length;
+                            const isActive = filter === status;
+                            return (
+                                <button
+                                    key={status}
+                                    onClick={() => setFilter(status)}
+                                    className={`flex items-center justify-between px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
+                                        isActive
+                                            ? 'bg-primary-600 text-white shadow-lg shadow-primary-200'
+                                            : 'bg-white text-gray-700 border border-gray-200 hover:border-primary-300 hover:bg-primary-50'
+                                    }`}
+                                >
+                                    <span>{status === 'all' ? 'All Issues' : status}</span>
+                                    <span className={`ml-2 text-xs px-1.5 py-0.5 rounded-full font-bold ${
+                                        isActive ? 'bg-white/25 text-white' : 'bg-gray-100 text-gray-600'
                                     }`}>
-                                        {issues.filter(i => i.status === status).length}
+                                        {count}
                                     </span>
-                                )}
-                            </button>
-                        ))}
+                                </button>
+                            );
+                        })}
                     </div>
 
                     {/* Issues List */}
@@ -229,129 +229,93 @@ const MyIssues = () => {
                             )}
                         </div>
                     ) : (
-                        <div className="space-y-6 animate-fade-in">
+                        <div className="space-y-4 animate-fade-in">
                             {filteredIssues.map((issue, index) => (
-                                <div key={issue._id} className="animate-slide-up" style={{animationDelay: `${index * 0.1}s`}}>
+                                <div key={issue._id}>
                                     <Link to={`/issue/${issue._id}`} className="block group">
-                                        <div className="card-gradient hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 hover:scale-[1.02] group-hover:border-primary-300">
-                                            <div className="flex items-start space-x-4 md:space-x-6">
+                                        <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden">
+                                            
+                                            {/* Mobile: image on top full-width. Desktop: side-by-side */}
+                                            <div className="flex flex-col md:flex-row">
                                                 {issue.imageUrl && (
-                                                    <div className="relative overflow-hidden rounded-2xl flex-shrink-0 shadow-lg">
+                                                    <div className="relative overflow-hidden flex-shrink-0">
                                                         <img
                                                             src={issue.imageUrl}
                                                             alt={issue.title}
-                                                            className="w-24 h-24 md:w-40 md:h-40 object-cover transition-transform duration-500 group-hover:scale-110"
+                                                            className="w-full h-44 md:w-40 md:h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                                         />
-                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                                        {/* Priority badge overlaid on image */}
+                                                        <span className={`absolute top-2 left-2 px-2 py-1 rounded-lg text-xs font-bold border ${getPriorityColor(issue.priority)}`}>
+                                                            {issue.priority}
+                                                        </span>
                                                     </div>
                                                 )}
-                                                <div className="flex-1 min-w-0 overflow-hidden">
-                                                    <div className="flex items-start justify-between mb-4">
-                                                        <h3 className="text-xl md:text-2xl font-bold text-gray-900 line-clamp-1 group-hover:text-primary-700 transition-colors duration-300 min-w-0 mr-2">
+
+                                                <div className="flex-1 p-4 min-w-0">
+                                                    {/* Title + status */}
+                                                    <div className="flex items-start justify-between gap-2 mb-2">
+                                                        <h3 className="font-bold text-gray-900 text-base leading-snug line-clamp-2 group-hover:text-primary-700 transition-colors flex-1 min-w-0">
                                                             {issue.title}
                                                         </h3>
-                                                        <div className="flex items-center flex-wrap gap-2 ml-2 flex-shrink-0">
-                                                            <span className={`px-3 py-1 md:px-4 md:py-2 rounded-2xl text-xs md:text-sm font-bold border-2 shadow-lg backdrop-blur-sm ${getPriorityColor(issue.priority)}`}>
-                                                                {issue.priority}
-                                                            </span>
-                                                            <span className={`px-3 py-1 md:px-4 md:py-2 rounded-2xl text-xs md:text-sm font-bold border-2 shadow-lg backdrop-blur-sm ${getStatusColor(issue.status)}`}>
-                                                                {issue.status}
-                                                            </span>
-                                                            {getChallengeStatusBadge(issue)}
-                                                        </div>
+                                                        <span className={`px-2 py-1 rounded-lg text-xs font-semibold border flex-shrink-0 ${getStatusColor(issue.status)}`}>
+                                                            {issue.status}
+                                                        </span>
                                                     </div>
 
-                                                    <p className="text-gray-600 mb-4 md:mb-6 line-clamp-2 text-base md:text-lg leading-relaxed">
+                                                    <p className="text-gray-500 text-sm line-clamp-2 mb-3 leading-relaxed">
                                                         {issue.description}
                                                     </p>
 
-                                                    <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500 mb-4">
-                                                        <div className="flex items-center bg-white/50 backdrop-blur-sm px-3 py-2 rounded-xl">
-                                                            <Calendar className="h-4 w-4 mr-2 text-primary-500" />
-                                                            <span className="font-medium">{formatDate(issue.createdAt)}</span>
-                                                        </div>
-                                                        <div className="flex items-center bg-white/50 backdrop-blur-sm px-3 py-2 rounded-xl">
-                                                            <MapPin className="h-4 w-4 mr-2 text-primary-500" />
-                                                            <span className="font-medium">{issue.location?.lat?.toFixed(4)}, {issue.location?.lng?.toFixed(4)}</span>
-                                                        </div>
-                                                        <div className="flex items-center bg-white/50 backdrop-blur-sm px-3 py-2 rounded-xl">
-                                                            <TrendingUp className="h-4 w-4 mr-2 text-primary-500" />
-                                                            <span className="font-medium">Score: {issue.priorityScore}</span>
-                                                        </div>
+                                                    {/* Metadata row */}
+                                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 mb-2">
+                                                        <span className="flex items-center gap-1">
+                                                            <Calendar className="h-3.5 w-3.5 text-primary-400" />
+                                                            {formatDate(issue.createdAt)}
+                                                        </span>
+                                                        <span className="flex items-center gap-1">
+                                                            <TrendingUp className="h-3.5 w-3.5 text-primary-400" />
+                                                            Score: {issue.priorityScore}
+                                                        </span>
                                                         {(issue.upvoteCount || 0) > 0 && (
-                                                            <div className="flex items-center bg-primary-50 px-3 py-2 rounded-xl border border-primary-100">
-                                                                <svg className="h-4 w-4 mr-1 text-primary-500" fill="currentColor" viewBox="0 0 20 20">
+                                                            <span className="flex items-center gap-1 text-primary-600 font-semibold">
+                                                                <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
                                                                     <path fillRule="evenodd" d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
                                                                 </svg>
-                                                                <span className="font-bold text-primary-600">{issue.upvoteCount}</span>
-                                                                <span className="ml-1 text-primary-500 text-xs">votes</span>
-                                                            </div>
+                                                                {issue.upvoteCount} votes
+                                                            </span>
                                                         )}
+                                                        {getChallengeStatusBadge(issue)}
                                                     </div>
 
                                                     {/* Challenge Status or Challenge Notice */}
                                                     {issue.hasChallenges ? (
-                                                        <div className={`p-4 rounded-2xl border-2 backdrop-blur-sm ${
+                                                        <div className={`mt-2 p-3 rounded-xl border text-xs font-semibold ${
                                                             issue.challengeResolved
                                                                 ? issue.challengeDecision === 'admin_wrong'
-                                                                    ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200'
-                                                                    : 'bg-gradient-to-r from-red-50 to-pink-50 border-red-200'
-                                                                : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'
+                                                                    ? 'bg-green-50 border-green-200 text-green-700'
+                                                                    : 'bg-red-50 border-red-200 text-red-700'
+                                                                : 'bg-blue-50 border-blue-200 text-blue-700'
                                                         }`}>
-                                                            <div className="flex items-center">
-                                                                {issue.challengeResolved ? (
-                                                                    issue.challengeDecision === 'admin_wrong' ? (
-                                                                        <>
-                                                                            <div className="bg-green-500 p-2 rounded-xl mr-3">
-                                                                                <CheckCircle className="h-5 w-5 text-white" />
-                                                                            </div>
-                                                                            <span className="text-sm text-green-700 font-bold">
-                                                                                Challenge successful! Super admin overturned the decision. Trust score +5.
-                                                                            </span>
-                                                                        </>
-                                                                    ) : (
-                                                                        <>
-                                                                            <div className="bg-red-500 p-2 rounded-xl mr-3">
-                                                                                <AlertCircle className="h-5 w-5 text-white" />
-                                                                            </div>
-                                                                            <span className="text-sm text-red-700 font-bold">
-                                                                                Challenge reviewed. Super admin upheld the original decision. Trust score -50.
-                                                                            </span>
-                                                                        </>
-                                                                    )
-                                                                ) : (
-                                                                    <>
-                                                                        <div className="bg-blue-500 p-2 rounded-xl mr-3">
-                                                                            <CheckCircle className="h-5 w-5 text-white" />
-                                                                        </div>
-                                                                        <span className="text-sm text-blue-700 font-bold">
-                                                                            Challenge submitted and awaiting super admin review
-                                                                        </span>
-                                                                    </>
-                                                                )}
-                                                            </div>
+                                                            {issue.challengeResolved
+                                                                ? issue.challengeDecision === 'admin_wrong'
+                                                                    ? '✅ Challenge won — decision overturned'
+                                                                    : '❌ Challenge reviewed — decision upheld'
+                                                                : '⏳ Challenge submitted — awaiting review'}
                                                         </div>
                                                     ) : isChallengeable(issue) && (
-                                                        <div className="p-4 bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-2xl backdrop-blur-sm">
-                                                            <div className="flex items-center justify-between">
-                                                                <div className="flex items-center">
-                                                                    <div className="bg-orange-500 p-2 rounded-xl mr-3">
-                                                                        <AlertCircle className="h-5 w-5 text-white" />
-                                                                    </div>
-                                                                    <span className="text-sm text-gray-700 font-medium">
-                                                                        {getAdminDecisionText(issue)}. You can challenge this decision.
-                                                                    </span>
-                                                                </div>
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.preventDefault();
-                                                                        handleChallengeClick(issue);
-                                                                    }}
-                                                                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-2 rounded-xl font-bold transition-all duration-300 transform hover:scale-105 shadow-lg"
-                                                                >
-                                                                    Challenge
-                                                                </button>
-                                                            </div>
+                                                        <div className="mt-2 p-3 bg-orange-50 border border-orange-200 rounded-xl flex items-center justify-between gap-2">
+                                                            <span className="text-xs text-orange-700 font-medium flex-1">
+                                                                {getAdminDecisionText(issue)}
+                                                            </span>
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    handleChallengeClick(issue);
+                                                                }}
+                                                                className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex-shrink-0"
+                                                            >
+                                                                Challenge
+                                                            </button>
                                                         </div>
                                                     )}
                                                 </div>

@@ -271,7 +271,7 @@ const IssueDetail = () => {
 
             <Sidebar />
 
-            <div className="relative z-10 flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8">
+            <div className="relative z-10 flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8 min-w-0 overflow-x-hidden">
                 <button
                     onClick={() => navigate(-1)}
                     className="mb-8 flex items-center text-gray-600 hover:text-primary-600 transition-all duration-300 transform hover:scale-105 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-xl shadow-lg hover:shadow-xl"
@@ -298,23 +298,23 @@ const IssueDetail = () => {
                             </div>
                         </div>
                             
-                        <div className="flex items-center space-x-6 text-sm text-gray-600">
+                        <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-gray-600 mt-1">
                             <div className="flex items-center">
-                                <User className="h-4 w-4 mr-2" />
-                                Reported by {issue.reportedBy?.name || 'Unknown'}
+                                <User className="h-4 w-4 mr-1.5 text-primary-400 flex-shrink-0" />
+                                <span>By <span className="font-medium text-gray-800">{issue.reportedBy?.name || 'Unknown'}</span></span>
                             </div>
                             <div className="flex items-center">
-                                <Calendar className="h-4 w-4 mr-2" />
-                                {formatDate(issue.createdAt)}
+                                <Calendar className="h-4 w-4 mr-1.5 text-primary-400 flex-shrink-0" />
+                                <span>{formatDate(issue.createdAt)}</span>
                             </div>
                             <div className="flex items-center">
-                                <TrendingUp className="h-4 w-4 mr-2" />
-                                Score: {issue.priorityScore}/100
+                                <TrendingUp className="h-4 w-4 mr-1.5 text-primary-400 flex-shrink-0" />
+                                <span>Score: <span className="font-semibold text-primary-600">{issue.priorityScore}/100</span></span>
                             </div>
                             {isIssueOwner && (
-                                <div className="flex items-center">
-                                    <span className="text-xs text-gray-500 mr-2">Your Trust Score:</span>
-                                    <span className={`text-sm font-semibold px-2 py-1 rounded ${
+                                <div className="flex items-center gap-1.5">
+                                    <span className="text-xs text-gray-500">Trust:</span>
+                                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
                                         (user?.trustScore ?? 100) >= 75 ? 'text-green-700 bg-green-100' :
                                         (user?.trustScore ?? 100) >= 50 ? 'text-yellow-700 bg-yellow-100' :
                                         (user?.trustScore ?? 100) >= 25 ? 'text-orange-700 bg-orange-100' :
@@ -328,52 +328,37 @@ const IssueDetail = () => {
 
                         {/* Upvote Section */}
                         {!isIssueOwner && (
-                            <div className="mt-5 pt-5 border-t border-gray-100 flex items-center gap-4">
+                            <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap items-center gap-3">
                                 <button
                                     onClick={handleUpvote}
                                     disabled={upvoting}
-                                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 transform hover:scale-105 active:scale-95 ${
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all duration-200 ${
                                         issue.userUpvoted ||
                                         issue.upvotes?.some(id => id === user?._id || id?._id === user?._id)
-                                            ? 'bg-primary-600 text-white shadow-lg shadow-primary-200'
-                                            : 'bg-gray-100 text-gray-600 hover:bg-primary-50 hover:text-primary-700 border-2 border-gray-200 hover:border-primary-300'
+                                            ? 'bg-primary-600 text-white shadow-md'
+                                            : 'bg-gray-100 text-gray-600 hover:bg-primary-50 hover:text-primary-700 border border-gray-200'
                                     } ${upvoting ? 'opacity-60 cursor-not-allowed' : ''}`}
                                 >
-                                    {upvoting ? (
-                                        <Loader className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                        <ArrowUp className="h-4 w-4" />
-                                    )}
-                                    {issue.userUpvoted ||
-                                     issue.upvotes?.some(id => id === user?._id || id?._id === user?._id)
-                                        ? 'Upvoted'
-                                        : 'Upvote this Issue'}
+                                    {upvoting ? <Loader className="h-4 w-4 animate-spin" /> : <ArrowUp className="h-4 w-4" />}
+                                    {issue.userUpvoted || issue.upvotes?.some(id => id === user?._id || id?._id === user?._id) ? 'Upvoted' : 'Upvote'}
                                 </button>
-                                <div className="flex items-center gap-2 text-gray-600">
+                                <div className="flex items-center gap-1.5 text-gray-600">
                                     <ThumbsUp className="h-4 w-4 text-primary-500" />
-                                    <span className="font-bold text-lg text-primary-600">
-                                        {issue.upvoteCount || 0}
-                                    </span>
-                                    <span className="text-sm">
-                                        {(issue.upvoteCount || 0) === 1 ? 'community vote' : 'community votes'}
-                                    </span>
+                                    <span className="font-bold text-primary-600">{issue.upvoteCount || 0}</span>
+                                    <span className="text-sm">{(issue.upvoteCount || 0) === 1 ? 'community vote' : 'community votes'}</span>
                                     {(issue.upvoteCount || 0) >= 5 && (
-                                        <span className="ml-1 text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-700 font-semibold">
-                                            🔥 Trending
-                                        </span>
+                                        <span className="text-xs px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 font-semibold">🔥 Trending</span>
                                     )}
                                 </div>
                             </div>
                         )}
                         {isIssueOwner && (
-                            <div className="mt-5 pt-5 border-t border-gray-100 flex items-center gap-2 text-gray-600">
+                            <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap items-center gap-1.5 text-gray-600">
                                 <ThumbsUp className="h-4 w-4 text-primary-500" />
-                                <span className="font-bold text-lg text-primary-600">{issue.upvoteCount || 0}</span>
+                                <span className="font-bold text-primary-600">{issue.upvoteCount || 0}</span>
                                 <span className="text-sm">community {(issue.upvoteCount || 0) === 1 ? 'vote' : 'votes'} on your issue</span>
                                 {(issue.upvoteCount || 0) >= 5 && (
-                                    <span className="ml-1 text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-700 font-semibold">
-                                        🔥 Trending
-                                    </span>
+                                    <span className="text-xs px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 font-semibold">🔥 Trending</span>
                                 )}
                             </div>
                         )}
@@ -412,19 +397,19 @@ const IssueDetail = () => {
                     {/* Location */}
                     <div className="card-gradient mb-6">
                         <h2 className="text-xl font-bold text-gray-900 mb-4">Location</h2>
-                        <div className="flex items-center text-gray-700">
-                            <MapPin className="h-5 w-5 mr-2 text-primary-600" />
-                            <span>
-                                Latitude: {issue.location?.lat?.toFixed(6)},
-                                Longitude: {issue.location?.lng?.toFixed(6)}
+                        <div className="flex items-start text-gray-700 mb-4">
+                            <MapPin className="h-5 w-5 mr-2 text-primary-600 flex-shrink-0 mt-0.5" />
+                            <span className="text-sm break-all">
+                                {issue.location?.lat?.toFixed(6)}, {issue.location?.lng?.toFixed(6)}
                             </span>
                         </div>
                         <a
                             href={`https://www.google.com/maps?q=${issue.location?.lat},${issue.location?.lng}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="mt-4 inline-block btn-secondary"
+                            className="inline-flex items-center gap-2 btn-secondary text-sm"
                         >
+                            <MapPin className="h-4 w-4" />
                             View on Google Maps
                         </a>
                     </div>
