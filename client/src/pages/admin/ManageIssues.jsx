@@ -229,14 +229,12 @@ const ManageIssues = () => {
                                 <h1 className="text-5xl font-black bg-gradient-to-r from-primary-600 via-primary-700 to-accent-600 bg-clip-text text-transparent tracking-tight">
                                     Manage Issues
                                 </h1>
-                                <p className="text-gray-600 text-xl font-medium">Review and update status of newly reported issues</p>
-                                <div className="mt-4 flex items-center gap-4 text-sm">
-                                    <span className="bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-700 px-4 py-2 rounded-2xl font-bold border border-yellow-200 shadow-lg backdrop-blur-sm">
+                                <p className="text-gray-600 text-sm md:text-xl font-medium">Review and update status of newly reported issues</p>
+                                <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+                                    <span className="bg-yellow-100 text-yellow-700 px-3 py-1.5 rounded-xl font-bold border border-yellow-200 text-xs">
                                         Pending Issues Only
                                     </span>
-                                    <span className="text-gray-500">
-                                        Move issues to "In Progress" or "Resolved" status
-                                    </span>
+                                    <span className="text-gray-500 text-xs">Move to "In Progress" or "Resolved"</span>
                                 </div>
                             </div>
                         </div>
@@ -256,8 +254,61 @@ const ManageIssues = () => {
                     </div>
                 </div>
 
-                {/* Issues Table */}
-                <div className="card overflow-hidden shadow-sm">
+                {/* Issues — Card list on mobile, Table on desktop */}
+
+                {/* Mobile card list */}
+                <div className="md:hidden space-y-3">
+                    {filteredIssues.map(issue => (
+                        <div key={issue._id} className={`bg-white rounded-2xl border shadow-sm p-4 ${issue.reportedAsFake ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}>
+                            <div className="flex items-start justify-between gap-2 mb-2">
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                        <span className="text-xs font-mono text-gray-500 bg-gray-100 px-2 py-0.5 rounded">#{issue._id.slice(-6)}</span>
+                                        <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${issue.priority === 'High' ? 'bg-red-100 text-red-700' : issue.priority === 'Medium' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
+                                            {issue.priority}
+                                        </span>
+                                        <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getStatusColor(issue.status)}`}>
+                                            {issue.status}
+                                        </span>
+                                    </div>
+                                    <h3 className="font-bold text-gray-900 text-sm leading-snug">{issue.title}</h3>
+                                    {issue.reportedAsFake && (
+                                        <span className="inline-flex items-center text-xs px-2 py-0.5 bg-red-100 text-red-700 rounded-full font-medium mt-1">
+                                            <AlertTriangle className="h-3 w-3 mr-1" />FAKE
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+                                <span className="font-medium text-gray-700">{issue.reportedBy?.name || 'Unknown'}</span>
+                                <span>Score: <span className="font-semibold text-primary-600">{issue.priorityScore}</span></span>
+                                <span>{new Date(issue.createdAt).toLocaleDateString()}</span>
+                            </div>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => handleUpdateIssue(issue)}
+                                    className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-xs font-semibold transition-colors"
+                                >
+                                    <Edit className="h-3.5 w-3.5" />
+                                    Update
+                                </button>
+                                {!issue.reportedAsFake && (
+                                    <button
+                                        onClick={() => handleReportAsFake(issue)}
+                                        disabled={reportingFake}
+                                        className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white rounded-xl text-xs font-semibold transition-colors"
+                                    >
+                                        <AlertTriangle className="h-3.5 w-3.5" />
+                                        Mark Fake
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Desktop table */}
+                <div className="hidden md:block card overflow-hidden shadow-sm">
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
@@ -276,60 +327,37 @@ const ManageIssues = () => {
                                 {filteredIssues.map(issue => (
                                     <tr key={issue._id} className={`hover:bg-gray-50 transition-colors duration-150 ${issue.reportedAsFake ? 'bg-red-50 border-l-4 border-red-400' : ''}`}>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                            <span className="bg-gray-100 px-2 py-1 rounded-md text-xs font-mono">
-                                                #{issue._id.slice(-6)}
-                                            </span>
+                                            <span className="bg-gray-100 px-2 py-1 rounded-md text-xs font-mono">#{issue._id.slice(-6)}</span>
                                         </td>
                                         <td className="px-6 py-4 text-sm text-gray-900">
                                             <div className="font-medium">{issue.title}</div>
                                             {issue.reportedAsFake && (
                                                 <span className="mt-1 inline-flex items-center text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full font-medium">
-                                                    <AlertTriangle className="h-3 w-3 mr-1" />
-                                                    FAKE REPORT
+                                                    <AlertTriangle className="h-3 w-3 mr-1" />FAKE REPORT
                                                 </span>
                                             )}
                                         </td>
                                         <td className="px-6 py-4 text-sm text-gray-600">
-                                            <div>
-                                                <div className="font-medium text-gray-900">{issue.reportedBy?.name || 'Unknown'}</div>
-                                                <div className="text-xs text-gray-500">{issue.reportedBy?.email || 'N/A'}</div>
-                                            </div>
+                                            <div className="font-medium text-gray-900">{issue.reportedBy?.name || 'Unknown'}</div>
+                                            <div className="text-xs text-gray-500">{issue.reportedBy?.email || 'N/A'}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`text-xs px-3 py-1 rounded-full font-medium ${issue.priority === 'High' ? 'bg-red-100 text-red-700 border border-red-200' :
-                                                issue.priority === 'Medium' ? 'bg-yellow-100 text-yellow-700 border border-yellow-200' :
-                                                    'bg-green-100 text-green-700 border border-green-200'
-                                                }`}>
+                                            <span className={`text-xs px-3 py-1 rounded-full font-medium ${issue.priority === 'High' ? 'bg-red-100 text-red-700 border border-red-200' : issue.priority === 'Medium' ? 'bg-yellow-100 text-yellow-700 border border-yellow-200' : 'bg-green-100 text-green-700 border border-green-200'}`}>
                                                 {issue.priority}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-700">
-                                            {issue.priorityScore}
-                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-700">{issue.priorityScore}</td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`text-xs px-3 py-1 rounded-full font-medium ${getStatusColor(issue.status)} border`}>
-                                                {issue.status}
-                                            </span>
+                                            <span className={`text-xs px-3 py-1 rounded-full font-medium ${getStatusColor(issue.status)} border`}>{issue.status}</span>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                            {new Date(issue.createdAt).toLocaleDateString()}
-                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{new Date(issue.createdAt).toLocaleDateString()}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm space-y-2">
-                                            <button
-                                                onClick={() => handleUpdateIssue(issue)}
-                                                className="cursor-pointer text-primary-600 hover:text-primary-700 hover:bg-primary-50 font-medium flex items-center px-3 py-1.5 rounded-md transition-all duration-200 border border-transparent hover:border-primary-200"
-                                            >
-                                                <Edit className="h-4 w-4 mr-1" />
-                                                Update
+                                            <button onClick={() => handleUpdateIssue(issue)} className="cursor-pointer text-primary-600 hover:text-primary-700 hover:bg-primary-50 font-medium flex items-center px-3 py-1.5 rounded-md transition-all duration-200 border border-transparent hover:border-primary-200">
+                                                <Edit className="h-4 w-4 mr-1" />Update
                                             </button>
                                             {!issue.reportedAsFake && (
-                                                <button
-                                                    onClick={() => handleReportAsFake(issue)}
-                                                    disabled={reportingFake}
-                                                    className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50 font-medium flex items-center px-3 py-1.5 rounded-md transition-all duration-200 border border-transparent hover:border-red-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                                                >
-                                                    <AlertTriangle className="h-4 w-4 mr-1" />
-                                                    Report Fake
+                                                <button onClick={() => handleReportAsFake(issue)} disabled={reportingFake} className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50 font-medium flex items-center px-3 py-1.5 rounded-md transition-all duration-200 border border-transparent hover:border-red-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                                                    <AlertTriangle className="h-4 w-4 mr-1" />Report Fake
                                                 </button>
                                             )}
                                         </td>

@@ -131,7 +131,53 @@ const ResolvedIssues = () => {
                     </div>
                 </div>
 
-                <div className="card overflow-hidden">
+                {/* Mobile card list */}
+                <div className="md:hidden space-y-3">
+                    {filteredIssues.map(issue => (
+                        <div key={issue._id} className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4">
+                            <div className="flex items-start justify-between gap-2 mb-2">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-xs font-mono text-gray-500 bg-gray-100 px-2 py-0.5 rounded">#{issue._id.slice(-6)}</span>
+                                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${issue.priority === 'High' ? 'bg-red-100 text-red-700' : issue.priority === 'Medium' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
+                                        {issue.priority}
+                                    </span>
+                                    <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-semibold flex items-center gap-1">
+                                        <CheckCircle className="h-3 w-3" /> Resolved
+                                    </span>
+                                </div>
+                            </div>
+
+                            <h3 className="font-bold text-gray-900 text-sm mb-1">{issue.title}</h3>
+                            <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+                                <span className="font-medium text-gray-700">{issue.reportedBy?.name || 'Unknown'}</span>
+                                {user?.role === 'super_admin' && issue.city && (
+                                    <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{issue.city}</span>
+                                )}
+                                <span>{issue.resolvedAt ? new Date(issue.resolvedAt).toLocaleDateString() : 'N/A'}</span>
+                            </div>
+
+                            {issue.resolvedScore && (
+                                <div className="flex items-center gap-2 mb-3">
+                                    <div className="flex-1 bg-gray-200 rounded-full h-1.5">
+                                        <div className={`h-1.5 rounded-full ${issue.resolvedScore >= 80 ? 'bg-green-500' : issue.resolvedScore >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${issue.resolvedScore}%` }}></div>
+                                    </div>
+                                    <span className={`text-xs font-bold ${issue.resolvedScore >= 80 ? 'text-green-600' : issue.resolvedScore >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>{issue.resolvedScore}%</span>
+                                </div>
+                            )}
+
+                            <button
+                                onClick={() => handleViewDetails(issue)}
+                                className="w-full flex items-center justify-center gap-1.5 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-xs font-semibold transition-colors"
+                            >
+                                <Eye className="h-3.5 w-3.5" />
+                                View Details
+                            </button>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Desktop table */}
+                <div className="hidden md:block card overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead className="bg-gray-50 border-b">
@@ -151,32 +197,19 @@ const ResolvedIssues = () => {
                             <tbody className="bg-white divide-y divide-gray-200">
                                 {filteredIssues.map(issue => (
                                     <tr key={issue._id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                            #{issue._id.slice(-6)}
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-900">
-                                            {issue.title}
-                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#{issue._id.slice(-6)}</td>
+                                        <td className="px-6 py-4 text-sm text-gray-900">{issue.title}</td>
                                         <td className="px-6 py-4 text-sm text-gray-600">
-                                            <div>
-                                                <div className="font-medium">{issue.reportedBy?.name || 'Unknown'}</div>
-                                                <div className="text-xs text-gray-500">{issue.reportedBy?.email || 'N/A'}</div>
-                                            </div>
+                                            <div className="font-medium">{issue.reportedBy?.name || 'Unknown'}</div>
+                                            <div className="text-xs text-gray-500">{issue.reportedBy?.email || 'N/A'}</div>
                                         </td>
                                         {user?.role === 'super_admin' && (
                                             <td className="px-6 py-4 text-sm text-gray-600">
-                                                <div className="flex items-center">
-                                                    <MapPin className="h-4 w-4 mr-1 text-gray-400" />
-                                                    {issue.city || 'Unknown'}
-                                                </div>
+                                                <div className="flex items-center"><MapPin className="h-4 w-4 mr-1 text-gray-400" />{issue.city || 'Unknown'}</div>
                                             </td>
                                         )}
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`text-xs px-2 py-1 rounded ${
-                                                issue.priority === 'High' ? 'bg-red-100 text-red-700' :
-                                                issue.priority === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
-                                                'bg-green-100 text-green-700'
-                                            }`}>
+                                            <span className={`text-xs px-2 py-1 rounded ${issue.priority === 'High' ? 'bg-red-100 text-red-700' : issue.priority === 'Medium' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
                                                 {issue.priority}
                                             </span>
                                         </td>
@@ -184,37 +217,16 @@ const ResolvedIssues = () => {
                                             {issue.resolvedScore ? (
                                                 <div className="flex items-center space-x-2">
                                                     <div className="w-12 bg-gray-200 rounded-full h-2">
-                                                        <div 
-                                                            className={`h-2 rounded-full ${
-                                                                issue.resolvedScore >= 80 ? 'bg-green-500' :
-                                                                issue.resolvedScore >= 60 ? 'bg-yellow-500' :
-                                                                'bg-red-500'
-                                                            }`}
-                                                            style={{ width: `${issue.resolvedScore}%` }}
-                                                        ></div>
+                                                        <div className={`h-2 rounded-full ${issue.resolvedScore >= 80 ? 'bg-green-500' : issue.resolvedScore >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${issue.resolvedScore}%` }}></div>
                                                     </div>
-                                                    <span className={`text-xs font-semibold ${
-                                                        issue.resolvedScore >= 80 ? 'text-green-600' :
-                                                        issue.resolvedScore >= 60 ? 'text-yellow-600' :
-                                                        'text-red-600'
-                                                    }`}>
-                                                        {issue.resolvedScore}%
-                                                    </span>
+                                                    <span className={`text-xs font-semibold ${issue.resolvedScore >= 80 ? 'text-green-600' : issue.resolvedScore >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>{issue.resolvedScore}%</span>
                                                 </div>
-                                            ) : (
-                                                <span className="text-xs text-gray-400">N/A</span>
-                                            )}
+                                            ) : <span className="text-xs text-gray-400">N/A</span>}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                            {issue.resolvedAt ? new Date(issue.resolvedAt).toLocaleDateString() : 'N/A'}
-                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{issue.resolvedAt ? new Date(issue.resolvedAt).toLocaleDateString() : 'N/A'}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                            <button
-                                                onClick={() => handleViewDetails(issue)}
-                                                className="text-primary-600 hover:text-primary-700 font-medium flex items-center"
-                                            >
-                                                <Eye className="h-4 w-4 mr-1" />
-                                                View Details
+                                            <button onClick={() => handleViewDetails(issue)} className="text-primary-600 hover:text-primary-700 font-medium flex items-center">
+                                                <Eye className="h-4 w-4 mr-1" />View Details
                                             </button>
                                         </td>
                                     </tr>

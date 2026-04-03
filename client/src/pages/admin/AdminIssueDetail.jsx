@@ -444,69 +444,36 @@ const AdminIssueDetail = () => {
 
                     {/* Priority Breakdown */}
                     {issue.scoreBreakdown && (
-                        <div className="bg-gradient-to-br from-white via-gray-50 to-gray-100 rounded-2xl shadow-xl border border-gray-200 p-4 md:p-8">
-                            <div className="flex items-center mb-8">
-                                <div className="bg-gradient-to-r from-orange-500 to-red-500 p-3 rounded-xl shadow-lg">
-                                    <TrendingUp className="h-6 w-6 text-white" />
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 mb-4">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="bg-orange-500 p-2 rounded-xl flex-shrink-0">
+                                    <TrendingUp className="h-5 w-5 text-white" />
                                 </div>
-                                <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent ml-4">
-                                    AI Priority Analysis
-                                </h2>
+                                <h2 className="text-base font-bold text-gray-900">AI Priority Analysis</h2>
                             </div>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                                <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-lg hover:shadow-xl transition-shadow">
-                                    <div className="flex items-center mb-3">
-                                        <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
-                                        <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Severity</p>
+
+                            {/* Score breakdown — horizontal list on mobile */}
+                            <div className="grid grid-cols-3 gap-2 mb-3">
+                                {[
+                                    { label: 'Severity', value: issue.scoreBreakdown.severity || 0, color: 'text-red-600', dot: 'bg-red-500' },
+                                    { label: 'Frequency', value: issue.scoreBreakdown.frequency || 0, color: 'text-orange-600', dot: 'bg-orange-500' },
+                                    { label: 'Location', value: issue.scoreBreakdown.locationImpact || 0, color: 'text-yellow-600', dot: 'bg-yellow-500' },
+                                    { label: 'Time', value: issue.scoreBreakdown.timePending || 0, color: 'text-blue-600', dot: 'bg-blue-500' },
+                                    { label: 'AI Boost', value: `+${issue.scoreBreakdown.aiAdjustment || 0}`, color: 'text-green-600', dot: 'bg-green-500' },
+                                ].map(({ label, value, color, dot }) => (
+                                    <div key={label} className="bg-gray-50 rounded-xl p-3 text-center">
+                                        <div className="flex items-center justify-center gap-1 mb-1">
+                                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${dot}`}></div>
+                                            <span className="text-xs text-gray-500 font-medium truncate">{label}</span>
+                                        </div>
+                                        <p className={`text-xl font-bold ${color}`}>{value}</p>
                                     </div>
-                                    <p className="text-3xl font-bold text-red-600">
-                                        {issue.scoreBreakdown.severity || 0}
-                                    </p>
-                                </div>
-                                <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-lg hover:shadow-xl transition-shadow">
-                                    <div className="flex items-center mb-3">
-                                        <div className="w-3 h-3 bg-orange-500 rounded-full mr-2"></div>
-                                        <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Frequency</p>
-                                    </div>
-                                    <p className="text-3xl font-bold text-orange-600">
-                                        {issue.scoreBreakdown.frequency || 0}
-                                    </p>
-                                </div>
-                                <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-lg hover:shadow-xl transition-shadow">
-                                    <div className="flex items-center mb-3">
-                                        <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
-                                        <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Location Impact</p>
-                                    </div>
-                                    <p className="text-3xl font-bold text-yellow-600">
-                                        {issue.scoreBreakdown.locationImpact || 0}
-                                    </p>
-                                </div>
-                                <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-lg hover:shadow-xl transition-shadow">
-                                    <div className="flex items-center mb-3">
-                                        <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-                                        <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Time Pending</p>
-                                    </div>
-                                    <p className="text-3xl font-bold text-blue-600">
-                                        {issue.scoreBreakdown.timePending || 0}
-                                    </p>
-                                </div>
-                                <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-lg hover:shadow-xl transition-shadow">
-                                    <div className="flex items-center mb-3">
-                                        <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                                        <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">AI Adjustment</p>
-                                    </div>
-                                    <p className="text-3xl font-bold text-green-600">
-                                        +{issue.scoreBreakdown.aiAdjustment || 0}
-                                    </p>
-                                </div>
-                                <div className="bg-gradient-to-br from-primary-500 to-primary-700 p-6 rounded-2xl text-white shadow-xl hover:shadow-2xl transition-shadow transform hover:scale-105 duration-200">
-                                    <div className="flex items-center mb-3">
-                                        <div className="w-3 h-3 bg-white rounded-full mr-2"></div>
-                                        <p className="text-sm font-semibold uppercase tracking-wide opacity-90">Final Score</p>
-                                    </div>
-                                    <p className="text-4xl font-bold">
-                                        {issue.priorityScore}/100
-                                    </p>
+                                ))}
+
+                                {/* Final Score — spans full width */}
+                                <div className="bg-primary-600 rounded-xl p-3 text-center col-span-3">
+                                    <p className="text-xs text-white/80 font-medium mb-0.5">Final Score</p>
+                                    <p className="text-2xl font-bold text-white">{issue.priorityScore}/100</p>
                                 </div>
                             </div>
                         </div>

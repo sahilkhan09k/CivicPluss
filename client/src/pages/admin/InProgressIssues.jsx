@@ -157,14 +157,14 @@ const InProgressIssues = () => {
                             : 'Track and manage issues currently being worked on'
                         }
                     </p>
-                    <div className="mt-4 flex items-center gap-4 text-sm">
-                        <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-medium">
-                            {issues.length} Active Issues
+                    <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+                        <span className="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-xl font-semibold text-xs whitespace-nowrap">
+                            {issues.length} Active {issues.length === 1 ? 'Issue' : 'Issues'}
                             {user?.role === 'super_admin' ? ' (State-wide)' : ''}
                         </span>
-                        <span className="text-gray-500">
+                        <span className="text-gray-500 text-xs">
                             {user?.role === 'super_admin'
-                                ? 'Oversight only - local admins manage resolution'
+                                ? 'Oversight only — local admins manage resolution'
                                 : 'Focus on completing these to improve resolution metrics'
                             }
                         </span>
@@ -249,7 +249,7 @@ const InProgressIssues = () => {
                                     </div>
                                 </div>
 
-                                <div className="flex items-center justify-between">
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                                     <div className="text-sm">
                                         <span className="text-gray-600">AI Score: </span>
                                         <span className="font-semibold text-primary-600">{issue.priorityScore}</span>
@@ -257,15 +257,15 @@ const InProgressIssues = () => {
                                     {user?.role !== 'super_admin' && (
                                         <button
                                             onClick={() => handleMarkAsResolved(issue)}
-                                            className="cursor-pointer bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors duration-200"
+                                            className="w-full sm:w-auto cursor-pointer bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-colors duration-200"
                                         >
                                             <CheckCircle className="h-4 w-4" />
                                             Mark Resolved
                                         </button>
                                     )}
                                     {user?.role === 'super_admin' && (
-                                        <div className="text-sm text-gray-500 italic">
-                                            Oversight only - managed by local admin
+                                        <div className="text-xs text-gray-500 italic">
+                                            Managed by local admin
                                         </div>
                                     )}
                                 </div>
