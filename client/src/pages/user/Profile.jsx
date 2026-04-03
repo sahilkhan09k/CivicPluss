@@ -107,47 +107,47 @@ const Profile = () => {
     const trustStatus = getTrustScoreStatus(trustScore);
 
     return (
-        <div className="flex min-h-screen bg-gradient-to-br from-gray-50 via-primary-50/30 to-accent-50/20">
+        <div className="flex min-h-screen bg-gradient-to-br from-gray-50 via-primary-50/30 to-accent-50/20 overflow-x-hidden">
             <Sidebar />
 
-            <div className="flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8">
-                <div className="max-w-4xl mx-auto">
-                    <div className="mb-8">
-                        <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent">
+            <div className="flex-1 md:ml-64 p-4 pt-16 md:pt-4 md:p-8 min-w-0 overflow-x-hidden">
+                <div className="max-w-4xl mx-auto w-full">
+                    <div className="mb-6">
+                        <h1 className="text-2xl md:text-4xl font-bold mb-1 bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent">
                             My Profile
                         </h1>
-                        <p className="text-gray-600 text-lg">Manage your account and view your civic impact</p>
+                        <p className="text-gray-600 text-sm md:text-lg">Manage your account and view your civic impact</p>
                     </div>
 
                     {/* Profile Card */}
-                    <div className="card-gradient mb-6">
-                        <div className="flex items-start gap-4">
+                    <div className="card-gradient mb-6 overflow-hidden">
+                        <div className="flex items-start gap-3">
                             {/* Avatar */}
-                            <div className="bg-gradient-to-br from-primary-500 to-primary-700 w-14 h-14 md:w-20 md:h-20 rounded-2xl flex items-center justify-center flex-shrink-0">
-                                <User className="h-7 w-7 md:h-10 md:w-10 text-white" />
+                            <div className="bg-gradient-to-br from-primary-500 to-primary-700 w-12 h-12 md:w-20 md:h-20 rounded-2xl flex items-center justify-center flex-shrink-0">
+                                <User className="h-6 w-6 md:h-10 md:w-10 text-white" />
                             </div>
 
                             {/* Info */}
-                            <div className="flex-1 min-w-0">
+                            <div className="flex-1 min-w-0 overflow-hidden">
                                 {!editing ? (
                                     <>
-                                        <div className="flex items-center justify-between gap-2 mb-1">
-                                            <h2 className="text-lg md:text-2xl font-bold text-gray-900 truncate">{user?.name}</h2>
+                                        <div className="flex items-start justify-between gap-2 mb-1">
+                                            <h2 className="text-base md:text-2xl font-bold text-gray-900 break-words leading-tight flex-1 min-w-0">{user?.name}</h2>
                                             <button
                                                 onClick={handleEditToggle}
-                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors text-xs font-semibold flex-shrink-0"
+                                                className="flex items-center gap-1 px-2.5 py-1.5 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors text-xs font-semibold flex-shrink-0"
                                             >
-                                                <Edit2 className="h-3.5 w-3.5" />
+                                                <Edit2 className="h-3 w-3" />
                                                 Edit
                                             </button>
                                         </div>
-                                        <div className="space-y-1 text-gray-600 text-xs md:text-sm">
+                                        <div className="space-y-1 text-gray-600 text-xs">
                                             <div className="flex items-center min-w-0">
                                                 <Mail className="h-3.5 w-3.5 mr-1.5 text-primary-500 flex-shrink-0" />
                                                 <span className="truncate">{user?.email}</span>
                                             </div>
                                             {user?.city && (
-                                                <div className="flex items-center gap-1">
+                                                <div className="flex items-center gap-1 flex-wrap">
                                                     <Award className="h-3.5 w-3.5 text-primary-500 flex-shrink-0" />
                                                     <span>City:</span>
                                                     <span className="px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full text-xs font-semibold">{user.city}</span>
@@ -157,7 +157,7 @@ const Profile = () => {
                                                 <Calendar className="h-3.5 w-3.5 mr-1.5 text-primary-500 flex-shrink-0" />
                                                 <span>Member since {user?.createdAt ? formatDate(user.createdAt) : 'N/A'}</span>
                                             </div>
-                                            <div className="flex items-center gap-1">
+                                            <div className="flex items-center gap-1 flex-wrap">
                                                 <Award className="h-3.5 w-3.5 text-primary-500 flex-shrink-0" />
                                                 <span>Role:</span>
                                                 <span className="px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full text-xs font-semibold capitalize">{user?.role || 'User'}</span>
@@ -271,60 +271,48 @@ const Profile = () => {
                     </div>
 
                     {/* Trust Score Card */}
-                    <div className="card-gradient mb-8">
-                        <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-                                <Shield className="h-7 w-7 mr-3 text-primary-600" />
+                    <div className="card-gradient mb-6 overflow-hidden">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-lg md:text-2xl font-bold text-gray-900 flex items-center">
+                                <Shield className="h-5 w-5 md:h-7 md:w-7 mr-2 text-primary-600 flex-shrink-0" />
                                 Trust Score
                             </h2>
-                            <span className={`text-lg font-semibold ${trustStatus.color}`}>
+                            <span className={`text-sm font-semibold ${trustStatus.color}`}>
                                 {trustStatus.icon} {trustStatus.label}
                             </span>
                         </div>
 
-                        <div className={`bg-gradient-to-r ${getTrustScoreColor(trustScore)} p-4 md:p-8 rounded-2xl text-white text-center mb-6`}>
-                            <p className="text-lg mb-2 opacity-90">Your Trust Score</p>
-                            <p className="text-7xl font-bold mb-2">{trustScore}</p>
-                            <p className="text-sm opacity-75">out of 100</p>
+                        <div className={`bg-gradient-to-r ${getTrustScoreColor(trustScore)} p-5 rounded-2xl text-white text-center mb-4`}>
+                            <p className="text-sm mb-1 opacity-90">Your Trust Score</p>
+                            <p className="text-6xl font-bold mb-1">{trustScore}</p>
+                            <p className="text-xs opacity-75">out of 100</p>
                         </div>
 
                         {/* Trust Score Progress Bar */}
-                        <div className="mb-6">
-                            <div className="flex justify-between text-sm text-gray-600 mb-2">
+                        <div className="mb-4">
+                            <div className="flex justify-between text-xs text-gray-600 mb-1.5">
                                 <span>Trust Level</span>
                                 <span>{trustScore}%</span>
                             </div>
-                            <div className="w-full bg-gray-200 rounded-full h-3">
+                            <div className="w-full bg-gray-200 rounded-full h-2.5">
                                 <div
-                                    className={`h-3 rounded-full bg-gradient-to-r ${getTrustScoreColor(trustScore)} transition-all duration-500`}
+                                    className={`h-2.5 rounded-full bg-gradient-to-r ${getTrustScoreColor(trustScore)} transition-all duration-500`}
                                     style={{ width: `${trustScore}%` }}
                                 ></div>
                             </div>
                         </div>
 
                         {/* Trust Score Info */}
-                        <div className="grid grid-cols-1 gap-3">
-                            <div className={`p-4 rounded-xl border-2 ${trustScore === 100 ? 'bg-green-50 border-green-200' :
-                                    trustScore >= 75 ? 'bg-yellow-50 border-yellow-200' :
-                                        trustScore >= 50 ? 'bg-orange-50 border-orange-200' :
-                                            'bg-red-50 border-red-200'
-                                }`}>
-                                <p className="text-sm font-semibold text-gray-700 mb-1">What is Trust Score?</p>
-                                <p className="text-xs text-gray-600 leading-relaxed">
-                                    Your trust score reflects the quality of your reports. It starts at 100 and decreases if reports are marked as fake by admins.
-                                </p>
-                            </div>
-
-                            <div className={`p-4 rounded-xl border-2 ${trustScore === 100 ? 'bg-green-50 border-green-200' :
-                                    trustScore >= 75 ? 'bg-yellow-50 border-yellow-200' :
-                                        trustScore >= 50 ? 'bg-orange-50 border-orange-200' :
-                                            'bg-red-50 border-red-200'
-                                }`}>
-                                <p className="text-sm font-semibold text-gray-700 mb-1">How to Maintain It?</p>
-                                <p className="text-xs text-gray-600 leading-relaxed">
-                                    Submit genuine reports with accurate information and real images. Fake reports reduce your score by 25 points.
-                                </p>
-                            </div>
+                        <div className="space-y-2">
+                            {[
+                                { title: 'What is Trust Score?', text: 'Your trust score reflects the quality of your reports. It starts at 100 and decreases if reports are marked as fake by admins.' },
+                                { title: 'How to Maintain It?', text: 'Submit genuine reports with accurate information and real images. Fake reports reduce your score by 25 points.' }
+                            ].map(({ title, text }) => (
+                                <div key={title} className={`p-3 rounded-xl border ${trustScore === 100 ? 'bg-green-50 border-green-200' : trustScore >= 75 ? 'bg-yellow-50 border-yellow-200' : trustScore >= 50 ? 'bg-orange-50 border-orange-200' : 'bg-red-50 border-red-200'}`}>
+                                    <p className="text-xs font-semibold text-gray-700 mb-0.5">{title}</p>
+                                    <p className="text-xs text-gray-600 leading-relaxed break-words">{text}</p>
+                                </div>
+                            ))}
                         </div>
 
                         {/* Warning Messages */}
