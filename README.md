@@ -2,7 +2,264 @@
 
 A comprehensive full-stack web application for reporting and managing civic infrastructure issues across all 125+ Maharashtra cities with AI-powered analysis, real-time maps, trust score system, and advanced challenge/appeal mechanisms.
 
+---
+
+## 🏆 Unique Selling Propositions (USPs)
+
+> What makes CivicPulse fundamentally different from any other civic issue reporting platform — and why it works.
+
+---
+
+### 1. 🤖 Intelligent Prioritization Engine
+
+Most civic platforms treat all issues equally — a broken streetlight gets the same attention as a pothole outside a hospital. CivicPulse solves this with a **multi-factor AI-driven priority scoring system** that calculates a 0–100 score for every issue the moment it is submitted.
+
+#### How It Works — The Formula
+
+```
+Priority Score = (Severity × 0.40) + (Location Impact × 0.35) + (Time Pending × 0.20) + (Frequency × 0.05) + AI Urgency Boost
+```
+
+**Factor 1 — Severity (40% weight)**
+
+Severity is calculated using a **hybrid AI approach** combining two independent signals:
+
+- **Text Analysis (80% of severity):** The issue title and description are sent to **Groq's LLaMA 3.3 70B model** via the Groq SDK. The model returns a severity score (1–10), issue category, urgency boost, and a relevance check. If the text is not related to civic infrastructure (e.g., random text, jokes), the submission is rejected outright.
+- **Image Analysis (20% of severity):** The uploaded photo is analyzed by a separate AI pipeline (`aiAnalyzeImage.js`) that assesses visual severity and also estimates **physical dimensions** — for example, pothole width and depth in centimeters, garbage area in square meters, or water leak flow rate. These dimensions are stored in the database and displayed to admins.
+- The two signals are combined: `combinedSeverity = (textSeverity × 0.8) + (imageSeverity × 0.2)`, then scaled to a 0–100 score.
+
+**Factor 2 — Location Impact (35% weight)**
+
+This is the most technically sophisticated factor. Rather than relying on keywords the user types (which can be gamed), CivicPulse uses the **GPS coordinates** of the issue to query the **Google Places Nearby Search API** with a 200-meter radius. The system detects what is actually near the issue location:
+
+| Score | Trigger | Examples |
+|-------|---------|---------|
+| **95** | High-impact facility nearby | Hospital, School, Police station, Airport, Train station |
+| **80** | Main road / highway | Highway, arterial road, main road |
+| **70** | Medium-impact place nearby | Market, Bank, Pharmacy, Park, Stadium |
+| **45** | Residential / default | No significant places nearby |
+
+If multiple factors are present (e.g., a pothole near both a hospital AND on a main road), a **cumulative bonus system** applies: the highest base score is taken, then +5 is added per additional factor, capped at 100. This means a pothole near a hospital on a main road scores 100 — the maximum possible location impact.
+
+**Factor 3 — Time Pending (20% weight)**
+
+Issues that remain unresolved compound in urgency over time. The time score uses an **aging multiplier**:
+
+| Age | Score | Urgency Level |
+|-----|-------|--------------|
+| < 6 hours | 10 | Just reported |
+| 6–24 hours | 25 | Low urgency |
+| 1–3 days | 50 | Moderate urgency |
+| 3–7 days | 75 | High urgency |
+| 7+ days | 100 | Critical — needs immediate attention |
+
+This means an issue that was ignored for a week automatically escalates to maximum time urgency, pushing it to the top of the admin queue without any manual intervention.
+
+**Factor 4 — Frequency (5% weight)**
+
+Nearby duplicate reports (within a 50-meter radius) contribute a small frequency score. This is intentionally weighted low because the platform already deduplicates issues — if 8 or more reports exist within 50 meters, new submissions are blocked and users are directed to upvote existing reports instead.
+
+**AI Urgency Boost**
+
+On top of the base score, the Groq LLM can add up to +15 urgency boost points if it detects critical keywords like "dangerous", "emergency", "hazard", or high-impact location mentions in the description. This boost is added after the base score calculation.
+
+**Priority Labels**
+
+| Score | Label |
+|-------|-------|
+| ≥ 70 | 🔴 High |
+| 45–69 | 🟡 Medium |
+| < 45 | 🟢 Low |
+
+**Technologies Used:** Groq SDK (LLaMA 3.3 70B), Google Places Nearby Search API, Google Geocoding API, Cloudinary (image hosting for AI analysis), Node.js, MongoDB
+
+---
+
+### 2. 🏛️ Three-Level Power Architecture
+
+CivicPulse implements a carefully designed **three-tier governance model** that mirrors how real municipal systems work — with clear separation of powers, accountability at every level, and checks and balances built in.
+
+#### Level 1 — Citizens (Users)
+
+Citizens are the foundation of the platform. They can:
+- Report civic issues with photo evidence and GPS location
+- Track the status of their own reports in real time
+- **Upvote** other citizens' issues to signal community importance (each upvote gives the reporter +2 trust score and boosts the issue's visibility)
+- **Challenge admin decisions** within a 24-hour window if they believe a resolution or spam marking was incorrect
+- View their **Trust Score** — a credibility metric that starts at 100 and changes based on their reporting behavior
+
+Citizens are subject to **rate limiting**: a 15-minute cooldown between submissions and a maximum of 20 issues per day, preventing spam while allowing genuine reporting.
+
+#### Level 2 — City Admins
+
+Each of the 125+ Maharashtra cities has a dedicated admin account (`{cityname}@civic.com`). City admins can only see and manage issues within their assigned city — they have no access to other cities' data. Their responsibilities include:
+- Moving issues from Pending → In Progress → Resolved
+- Uploading resolution photos (which are AI-verified before the issue can be closed)
+- Marking issues as Spam/Fake (which triggers the trust score penalty system)
+- Viewing city-specific analytics, heatmaps, and performance metrics
+
+When a city admin marks an issue as resolved, they must upload a resolution photo. The system then uses **AI photo comparison** (Groq Vision API) to compare the original issue photo with the resolution photo and calculate a `resolvedScore` (0–100%). If the score is below 60%, the resolution is rejected — the admin cannot close the issue without genuine proof of completion. This prevents admins from falsely marking issues as resolved.
+
+#### Level 3 — Super Admin
+
+The Super Admin has cross-city visibility and serves as the **final arbiter** of the platform. Their exclusive capabilities include:
+- Viewing all issues across all 125+ cities simultaneously
+- Reviewing the **Challenge Queue** — when a citizen successfully challenges an admin decision (photo similarity > 50%), the challenge is escalated to the Super Admin for final review
+- Making final decisions: "Admin Was Wrong" (issue restored, admin accountability tracked) or "Admin Was Correct" (challenge rejected)
+- Viewing **Admin Performance Metrics** — overturn rates, decision quality scores, and challenge history for every city admin
+- Accessing state-wide analytics and trend data
+
+This three-level architecture ensures that no single actor has unchecked power. Citizens can challenge admins. Admins are accountable to the Super Admin. The Super Admin's decisions are logged and auditable.
+
+**Technologies Used:** JWT authentication with role-based access control, MongoDB city-based data isolation, Express.js middleware (`requireAdmin`, `verifyJWT`), Socket.IO for real-time notifications
+
+---
+
+### 3. 🛡️ Multi-Layer Spam Prevention System
+
+Spam and fake reports are the biggest threat to any civic platform's credibility. CivicPulse implements **five independent layers of spam prevention** that work together to maintain data quality.
+
+#### Layer 1 — Content Validation (Pre-submission)
+
+Before an issue is even processed, the title and description pass through a **regex-based spam detection engine** (`spamDetection.js`):
+- Rejects repeated characters (e.g., "aaaaaaa", "11111")
+- Blocks submissions containing only special characters
+- Filters commercial spam keywords (buy, sell, cheap, free, click, promo, discount)
+- Blocks URLs in descriptions
+- Rejects long number sequences (phone numbers)
+- Enforces minimum meaningful content: title must have ≥ 2 words of ≥ 3 characters; description must have ≥ 3 meaningful words
+
+#### Layer 2 — AI Relevance Check (Pre-submission)
+
+Even if content passes the regex filter, the Groq LLM performs a **semantic relevance check**. The model determines whether the submission is genuinely about a civic infrastructure issue. If `isRelevant: false` is returned, the submission is rejected with a user-friendly error message. This catches creative spam that bypasses keyword filters.
+
+#### Layer 3 — Image Relevance Check (Pre-submission)
+
+The uploaded image is analyzed by the AI image pipeline to verify it shows a civic infrastructure problem. Non-civic images (selfies, random photos, screenshots) are rejected before the issue is created.
+
+#### Layer 4 — Location Deduplication (Pre-submission)
+
+The system checks for existing issues within a **50-meter radius** (calculated using coordinate bounding boxes). If 8 or more reports already exist at that location, the new submission is blocked. This prevents coordinated spam attacks targeting a single location.
+
+#### Layer 5 — Trust Score System with Delayed Penalties (Post-submission)
+
+When an admin marks an issue as Spam/Fake, the system does **not** immediately penalize the user. Instead:
+1. The issue is flagged and the user is notified via email
+2. A **24-hour challenge window** opens — the user can appeal the decision
+3. If the user does not challenge within 24 hours, the `trustScoreScheduler.js` (which runs every hour via `setInterval`) automatically applies a **-25 trust score penalty**
+4. If the user's trust score reaches 0, their account is automatically suspended and their email is added to a permanent ban list (`BannedEmail` model) — preventing re-registration
+5. If the user successfully challenges the decision (see USP #2), no penalty is applied
+
+The scheduler also sends **progressive warning notifications** at trust score thresholds of 50, 25, and 10, giving users clear feedback before suspension.
+
+**Technologies Used:** Node.js regex engine, Groq LLaMA 3.3 70B (semantic relevance), MongoDB geospatial queries, `setInterval` scheduler, Nodemailer (Gmail SMTP) for email notifications, Socket.IO for real-time in-app notifications
+
+---
+
+### 4. 📊 Advanced Visualization Tools
+
+CivicPulse provides rich, data-driven visualization tools for both admins and citizens — turning raw issue data into actionable geographic and temporal intelligence.
+
+#### Issue Density Heatmap (City Map)
+
+The public-facing City Map page renders all active issues on a **Google Maps** canvas with a custom density heatmap overlay. The heatmap is built using **Google Maps Circle overlays** rather than the standard HeatmapLayer, giving finer control over appearance:
+- Each issue contributes a circle centered on its GPS coordinates with a 500-meter radius
+- Circle **opacity** scales with local density: `opacity = min(0.15 + (density × 0.05), 0.4)`
+- Circle **color** reflects priority: red for High, yellow for Medium, green for Low
+- Users can toggle the heatmap on/off
+- The map auto-centers on the user's city with zoom level 13
+
+#### Admin Dashboard — Problem Zone Detection
+
+The Admin Dashboard includes a **Top 5 Problem Zones** panel that groups issues by approximate location (0.01 degree precision, roughly 1km grid squares) and identifies the highest-density clusters. Each zone shows issue count, priority level, and GPS coordinates. The map also renders **dynamic circles** for the top 3 zones with radius proportional to issue count (`radius = max(300, issueCount × 100)` meters).
+
+#### Weekly Trend Charts
+
+The Admin Dashboard renders a **7-day bar chart** (using Recharts) showing reported vs. resolved issues per day. This gives admins an immediate visual of their resolution velocity and backlog trends.
+
+#### Analytics Page — Multi-Chart Dashboard
+
+The dedicated Analytics page provides:
+- **Pie chart** — Issues by priority distribution (using Recharts PieChart)
+- **Bar chart** — Top problem zones by issue count
+- **Line chart** — Weekly activity trend (reported vs. resolved over 7 days)
+- **Key metrics** — Total issues, resolution rate percentage, average response time, citizen satisfaction score
+
+#### Resolution Verification Score Visualization
+
+When an admin resolves an issue, the AI comparison score is displayed as a **color-coded progress bar** in both the admin and user interfaces:
+- Green (≥ 80%): Excellent resolution
+- Yellow (60–79%): Good resolution
+- Red (< 60%): Rejected — resolution not verified
+
+**Technologies Used:** Google Maps JavaScript API (`@react-google-maps/api`), Google Maps Circle overlays, Recharts (BarChart, LineChart, PieChart), MongoDB aggregation for zone clustering, Node.js date arithmetic for weekly trends
+
+---
+
+### 5. ⚖️ Two-Level Challenge & Appeal System
+
+This is CivicPulse's most unique feature — a **formal appeals process** that gives citizens legal-style recourse against admin decisions, with AI-powered evidence verification.
+
+#### How It Works
+
+When an admin marks an issue as Resolved or Spam, a **24-hour countdown timer** appears on the user's issue detail page. Within this window, the user can:
+
+1. **Initiate a challenge** — they must physically go to the original issue location
+2. **Location verification** — the browser's Geolocation API checks that the user is within **50 meters** of the original issue coordinates (using haversine distance calculation)
+3. **Live photo capture** — the user must take a new photo using their device camera (gallery uploads are blocked via `capture="environment"` HTML attribute)
+4. **AI photo comparison** — the new photo is compared against the original issue photo using **Groq Vision API**, producing a similarity score (0–100%)
+5. **Automatic decision** — if similarity > 50%, the challenge is accepted and escalated to the Super Admin; if ≤ 50%, it is automatically rejected
+
+The Super Admin then reviews accepted challenges with a side-by-side photo comparison interface and makes the final decision. If the admin was wrong, the issue is restored to its original state and the admin's overturn rate increases. If the admin was correct, the challenge is rejected.
+
+**Technologies Used:** HTML5 Geolocation API, Haversine distance formula, Groq Vision API (photo comparison), MongoDB transactions (atomic state restoration), Socket.IO (real-time challenge notifications), Nodemailer (email notifications at each stage)
+
+---
+
+### 6. ⏰ Automatic Issue Escalation (7-Day Rule)
+
+Issues that remain unresolved for 7+ days are **automatically escalated** through the priority scoring system without any manual intervention. This is implemented through the **time-pending factor** in the priority score formula:
+
+- At 7+ days, the time score reaches its maximum value of **100**
+- Since time pending carries 20% weight, this adds up to 20 points to the priority score
+- Combined with severity and location factors, a week-old issue near a hospital can reach a priority score of 95–100
+- The admin dashboard's "Critical Unresolved" counter specifically tracks High-priority issues that remain unresolved, creating visible accountability pressure
+
+This means admins cannot simply ignore issues — the longer an issue sits unresolved, the higher it climbs in the priority queue, making it impossible to bury.
+
+---
+
+### 7. 🔐 Trust Score Economy
+
+The Trust Score system creates a **self-regulating community** where good behavior is rewarded and bad behavior is penalized — without requiring manual moderation for every action.
+
+| Action | Trust Score Change |
+|--------|-------------------|
+| Issue verified/upvoted by community | +2 per upvote |
+| Issue marked as Spam by admin (unchallenged) | -25 after 24 hours |
+| Challenge won (admin was wrong) | No penalty |
+| Challenge lost (admin was correct) | -50 |
+| Trust score reaches 0 | Account suspended + email banned |
+
+The delayed penalty system (24-hour window before -25 is applied) is a deliberate design choice: it gives genuine users time to appeal while still penalizing bad actors who don't bother to challenge. The scheduler runs every hour, checking for expired challenge windows and applying penalties automatically.
+
+---
+
+### 8. 📧 Automated Email Notification Pipeline
+
+Every significant event in the platform triggers an automated email via **Nodemailer with Gmail SMTP**:
+
+- **Registration**: OTP verification email with 6-digit code (10-minute expiry)
+- **Issue Resolved**: Professional HTML email with AI verification score, color-coded progress bar, and 24-hour challenge window information
+- **Issue Marked Spam**: Warning email with exact deadline timestamp, trust score penalty explanation, and step-by-step challenge instructions
+- **Challenge Updates**: Notifications at each stage (submitted, accepted/rejected, reviewed)
+
+All emails use responsive HTML templates with CivicPulse branding, action buttons, and clear calls-to-action.
+
+---
+
 ## 🚀 Key Features Overview
+
 
 ### 🏛️ **Multi-City Administration**
 - **125+ Maharashtra Cities**: Complete coverage from Mumbai to smallest towns
